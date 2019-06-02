@@ -4,6 +4,8 @@
 
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/cloud"
@@ -11,6 +13,10 @@
         android:roundIcon="@mipmap/cloud"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyDvu3GJb2_KQDR8u1KQLMdifEiY6wI59mU"></meta-data>
         <activity android:name=".AddActivity"></activity>
         <activity android:name=".RateActivity" />
         <activity android:name=".MainActivity">

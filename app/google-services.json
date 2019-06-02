@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "484228113740",
+    "firebase_url": "https://gooroomteo.firebaseio.com",
+    "project_id": "gooroomteo",
+    "storage_bucket": "gooroomteo.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:484228113740:android:7487dfed2419a2f9",
+        "android_client_info": {
+          "package_name": "edu.skku.GooroomTeo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "484228113740-tcqq83arkmd1ufpfeejjoiv846bq689q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBUPeAIpc37FxvfGx4HG5G6iRu6OvVtzOc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "484228113740-tcqq83arkmd1ufpfeejjoiv846bq689q.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

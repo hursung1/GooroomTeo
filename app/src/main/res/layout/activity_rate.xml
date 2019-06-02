@@ -43,7 +43,7 @@
     </ListView>
 
     <Button
-        android:id="@+id/wrong"
+        android:id="@+id/alertwrongbtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="잘못된 정보 신고"

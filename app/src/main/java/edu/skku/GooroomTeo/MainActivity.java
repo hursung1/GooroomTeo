@@ -39,6 +39,8 @@ public class MainActivity extends AppCompatActivity
         implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
     Button addbtn;
     Button findbtn;
+    Button Firebtn;
+    Button currentbtn;
     GoogleMap map;
     double lon;
     double lat;
@@ -55,6 +57,7 @@ public class MainActivity extends AppCompatActivity
     double [] testarray;
     int a;
     String title;
+    Location current;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,21 +89,7 @@ public class MainActivity extends AppCompatActivity
 
         Log.d("before mark", "tag" );
         //지도에 마커표시하기
-        getFirebaseDatabase();
-        for (int i=0; i<data.size(); i++){
-            getFromFire=data.get(i);
-            splitstring=getFromFire.split(":");
-            comlon=Double.valueOf(splitstring[0]).doubleValue();
-            comlat=Double.valueOf(splitstring[1]).doubleValue();
-            title=splitstring[2];
-            LatLng marker=new LatLng(comlat,comlon);
-            MarkerOptions markerOptions = new MarkerOptions();
-            markerOptions.position(marker);
-            markerOptions.title(title);
-            map.addMarker(markerOptions);
 
-
-        }
 
         Log.d("after mark", "tag" );
 
@@ -113,10 +102,33 @@ public class MainActivity extends AppCompatActivity
             }
 
         });
-        findbtn = findViewById(R.id.findnear);
-        findbtn.setOnClickListener(new View.OnClickListener() {
+        //파이어베이스에서 데이터 가져오기
+        Firebtn= findViewById(R.id.getFirebase);
+        Firebtn.setOnClickListener(new View.OnClickListener(){
             @Override
-            public void onClick(View v) {
+            public void onClick(View v){
+                getFirebaseDatabase();
+                for (int i=0; i<data.size(); i++){
+                    getFromFire=data.get(i);
+                    splitstring=getFromFire.split(":");
+                    comlon=Double.valueOf(splitstring[0]).doubleValue();
+                    comlat=Double.valueOf(splitstring[1]).doubleValue();
+                    title=splitstring[2];
+                    LatLng marker =new LatLng(comlat,comlon);
+                    MarkerOptions markerOptions = new MarkerOptions();
+                    markerOptions.position(marker);
+                    markerOptions.title(title);
+                    map.addMarker(markerOptions);
+                    map.setOnMarkerClickListener(MainActivity.this);
+
+                }
+            }
+        });
+        currentbtn=findViewById(R.id.curbtn);
+        currentbtn.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+
                 LatLng MyPos = new LatLng(lat, lon);
                 Location current=new Location("myCurrent");
                 current.setLatitude(lat);
@@ -125,11 +137,21 @@ public class MainActivity extends AppCompatActivity
                 markerOptions.position(MyPos);
                 markerOptions.title("현위치");
                 map.addMarker(markerOptions);
+
+                map.setOnMarkerClickListener(MainActivity.this);
                 map.moveCamera(CameraUpdateFactory.newLatLng(MyPos));
                 map.animateCamera(CameraUpdateFactory.zoomTo(16));
+            }
+        });
 
+        findbtn = findViewById(R.id.findnear);
+        findbtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Location current=new Location("myCurrent");
+                current.setLatitude(lat);
+                current.setLongitude(lon);
                 //데이터 받아와서 거리계산하기
-                getFirebaseDatabase();
                 shortest=100000000;
                 for (int i=0; i<data.size(); i++){
                     getFromFire=data.get(i);
@@ -152,6 +174,8 @@ public class MainActivity extends AppCompatActivity
                 shortlat=Double.valueOf(splitstring[1]).doubleValue();
                 shortlon=Double.valueOf(splitstring[0]).doubleValue();
                 LatLng Shortplace = new LatLng(lat, lon);
+
+                map.setOnMarkerClickListener(MainActivity.this);
                 map.moveCamera(CameraUpdateFactory.newLatLng(Shortplace));
                 map.animateCamera(CameraUpdateFactory.zoomTo(16));
 
@@ -188,6 +212,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onMapReady(final GoogleMap map) {
         this.map = map;
+
         LatLng SEOUL = new LatLng(37.56, 126.97);
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(SEOUL);
@@ -197,6 +222,8 @@ public class MainActivity extends AppCompatActivity
         map.setOnMarkerClickListener(this);
         map.moveCamera(CameraUpdateFactory.newLatLng(SEOUL));
         map.animateCamera(CameraUpdateFactory.zoomTo(10));
+
+
     }
 
     public boolean onMarkerClick(Marker marker) {
@@ -209,7 +236,6 @@ public class MainActivity extends AppCompatActivity
         return true;
 
     }
-
 
     public void getFirebaseDatabase() {
         final ValueEventListener postListener = new ValueEventListener() {

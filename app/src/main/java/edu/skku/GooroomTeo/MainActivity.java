@@ -148,6 +148,7 @@ public class MainActivity extends AppCompatActivity
         findbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                getFirebaseDatabase();
                 Location current=new Location("myCurrent");
                 current.setLatitude(lat);
                 current.setLongitude(lon);
@@ -173,7 +174,7 @@ public class MainActivity extends AppCompatActivity
                 splitstring=shortestPlace.split(":");
                 shortlat=Double.valueOf(splitstring[1]).doubleValue();
                 shortlon=Double.valueOf(splitstring[0]).doubleValue();
-                LatLng Shortplace = new LatLng(lat, lon);
+                LatLng Shortplace = new LatLng(shortlat, shortlon);
 
                 map.setOnMarkerClickListener(MainActivity.this);
                 map.moveCamera(CameraUpdateFactory.newLatLng(Shortplace));

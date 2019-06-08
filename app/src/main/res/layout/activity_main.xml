@@ -5,11 +5,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
+
     <fragment
         android:id="@+id/map"
+        class="com.google.android.gms.maps.MapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        class="com.google.android.gms.maps.MapFragment" />
+        tools:layout_editor_absoluteX="146dp"
+        tools:layout_editor_absoluteY="161dp" />
 
 
     <Button
@@ -26,5 +29,23 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         android:text="흡연 구역 추가"/>
+
+    <Button
+        android:id="@+id/getFirebase"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="데이터가져오기"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/findnear" />
+
+    <Button
+        android:id="@+id/curbtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="1dp"
+        android:text="현위치"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/getFirebase" />
 
 </android.support.constraint.ConstraintLayout>

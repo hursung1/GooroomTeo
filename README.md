@@ -20,7 +20,7 @@ GooroomTeo, ¿Where is the smoking zone in our school?
 수정 로그[2019/06/09 오후 5시쯤]
 1. Pin을 누르면 RateActivity에서 해당 위치 이름과 평균 평점, 사용자들의 rate와 comment가 잘 나옵니다.
 2. 의미 없는 서울 pin을 삭제하였습니다.
-3. RateActivity
+3. RateActivity가 이제 Landscape Mode를 지원합니다.
 
 문제점[2019/06/09 오후 5시쯤]
 1. 현위치 (0, 0)으로 나오는 문제를 수정할 필요가 있습니다.

@@ -57,12 +57,12 @@ public class MainActivity extends AppCompatActivity
     private double shortest;
     private String title;
     private String getFromFire;
-    private String [] splitstring;
+    private String[] splitstring;
     private String shortestPlace;
 
     private ArrayList<String> data;
 
-    private double [] testarray;
+    private double[] testarray;
     private int a;
 
     @Override
@@ -92,13 +92,13 @@ public class MainActivity extends AppCompatActivity
         }
         mPostReference = FirebaseDatabase.getInstance().getReference();
 
-        Log.d("before mark", "tag" );
+        Log.d("before mark", "tag");
         //지도에 마커표시하기
 
 
-        Log.d("after mark", "tag" );
+        Log.d("after mark", "tag");
 
-        /*addbtn = findViewById(R.id.addcontent);
+        addbtn = findViewById(R.id.addbtn);
         addbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -106,21 +106,21 @@ public class MainActivity extends AppCompatActivity
                 startActivity(intent);
             }
 
-        });*/
+        });
 
         //파이어베이스에서 데이터 가져오기
-        Firebtn= findViewById(R.id.getFirebase);
-        Firebtn.setOnClickListener(new View.OnClickListener(){
+        Firebtn = findViewById(R.id.getFirebase);
+        Firebtn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v){
+            public void onClick(View v) {
                 //getFirebaseDatabase();
-                for (int i=0; i<data.size(); i++){
-                    getFromFire=data.get(i);
-                    splitstring=getFromFire.split(":");
-                    comlon=Double.valueOf(splitstring[0]).doubleValue();
-                    comlat=Double.valueOf(splitstring[1]).doubleValue();
-                    title=splitstring[2];
-                    LatLng marker =new LatLng(comlat,comlon);
+                for (int i = 0; i < data.size(); i++) {
+                    getFromFire = data.get(i);
+                    splitstring = getFromFire.split(":");
+                    comlon = Double.valueOf(splitstring[0]).doubleValue();
+                    comlat = Double.valueOf(splitstring[1]).doubleValue();
+                    title = splitstring[2];
+                    LatLng marker = new LatLng(comlat, comlon);
                     MarkerOptions markerOptions = new MarkerOptions();
                     markerOptions.position(marker);
                     markerOptions.title(title);
@@ -130,13 +130,13 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         });
-        currentbtn=findViewById(R.id.curbtn);
-        currentbtn.setOnClickListener(new View.OnClickListener(){
+        currentbtn = findViewById(R.id.curbtn);
+        currentbtn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v){
+            public void onClick(View v) {
 
                 LatLng MyPos = new LatLng(lat, lon);
-                Location current=new Location("myCurrent");
+                Location current = new Location("myCurrent");
                 current.setLatitude(lat);
                 current.setLongitude(lon);
                 MarkerOptions markerOptions = new MarkerOptions();
@@ -155,31 +155,31 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 //getFirebaseDatabase();
-                Location current=new Location("myCurrent");
+                Location current = new Location("myCurrent");
                 current.setLatitude(lat);
                 current.setLongitude(lon);
                 //데이터 받아와서 거리계산하기
-                shortest=100000000;
-                for (int i=0; i<data.size(); i++){
-                    getFromFire=data.get(i);
-                    splitstring=getFromFire.split(":");
-                    comlon=Double.valueOf(splitstring[0]).doubleValue();
-                    comlat=Double.valueOf(splitstring[1]).doubleValue();
-                    Location comPos=new Location("comPos");
+                shortest = 100000000;
+                for (int i = 0; i < data.size(); i++) {
+                    getFromFire = data.get(i);
+                    splitstring = getFromFire.split(":");
+                    comlon = Double.valueOf(splitstring[0]).doubleValue();
+                    comlat = Double.valueOf(splitstring[1]).doubleValue();
+                    Location comPos = new Location("comPos");
                     comPos.setLatitude(comlat);
                     comPos.setLongitude(comlon);
 
-                    double distance=current.distanceTo(comPos);
-                    if (shortest>distance){
-                        double temp=distance;
-                        shortest=temp;
-                        a=i;
+                    double distance = current.distanceTo(comPos);
+                    if (shortest > distance) {
+                        double temp = distance;
+                        shortest = temp;
+                        a = i;
                     }
                 }
-                shortestPlace=data.get(a);
-                splitstring=shortestPlace.split(":");
-                shortlat=Double.valueOf(splitstring[1]).doubleValue();
-                shortlon=Double.valueOf(splitstring[0]).doubleValue();
+                shortestPlace = data.get(a);
+                splitstring = shortestPlace.split(":");
+                shortlat = Double.valueOf(splitstring[1]).doubleValue();
+                shortlon = Double.valueOf(splitstring[0]).doubleValue();
                 LatLng Shortplace = new LatLng(shortlat, shortlon);
 
                 map.setOnMarkerClickListener(MainActivity.this);

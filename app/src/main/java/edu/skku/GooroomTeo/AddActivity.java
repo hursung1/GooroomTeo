@@ -1,18 +1,12 @@
 package edu.skku.GooroomTeo;
 import android.Manifest;
-import android.app.Activity;
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.graphics.Point;
-import android.graphics.Rect;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -25,59 +19,35 @@ import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.util.SparseArray;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import java.io.File;
 import java.io.IOException;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
-import com.google.api.services.vision.v1.model.BatchAnnotateImagesResponse;
-import com.google.api.services.vision.v1.model.EntityAnnotation;
-import com.google.firebase.ml.vision.FirebaseVision;
-import com.google.firebase.ml.vision.common.FirebaseVisionImage;
-import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
-import com.google.firebase.ml.vision.document.FirebaseVisionCloudDocumentRecognizerOptions;
-import com.google.firebase.ml.vision.document.FirebaseVisionDocumentText;
-import com.google.firebase.ml.vision.document.FirebaseVisionDocumentTextRecognizer;
-import com.google.firebase.ml.vision.text.FirebaseVisionCloudTextRecognizerOptions;
-import com.google.firebase.ml.vision.text.FirebaseVisionText;
-import com.google.firebase.ml.vision.text.FirebaseVisionTextRecognizer;
-import com.google.firebase.ml.vision.text.RecognizedLanguage;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
-import edu.skku.GooroomTeo.R;
-import java.io.File;
-import java.io.IOException;
+
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
-import androidx.annotation.NonNull;
+import java.util.HashMap;
+import java.util.Map;
+
 
 public class AddActivity extends AppCompatActivity {
-    Button uploadbtn, savebtn;
-    private static final String CLOUD_VISION_API_KEY = "AIzaSyCGugRd1RIEcOo0StBGJnHIad7aYmNClxg";
-    public static final String FILE_NAME = "temp.jpg";
     final private static int REQUEST_IMAGE_CAPTURE = 1;
     final private static int RESULT_LOAD_IMAGE = 2;
     final private static int REQUEST_CAMERA_PERMISSION_GRANTED = 3;
     final private static int REQUEST_STORAGE_PERMISSION_GRANTED = 4;
-    static String k;
 
     private Button cameraButton, uploadImageButton;
     private ImageView imagePreview;
@@ -86,12 +56,11 @@ public class AddActivity extends AppCompatActivity {
     private Button regButton, scanImage, resultPage;
     private Bitmap image;
     private static String imageFilePath;
+    private DatabaseReference DBReference = FirebaseDatabase.getInstance().getReference();
 
     double lat, lon;
     String locname;
 
-    protected LocationManager locationManager;
-    public Location lastknownLocation = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -142,7 +111,7 @@ public class AddActivity extends AppCompatActivity {
             public void onClick(View v) {
                 makeToastText(lon + "  " + lat);
                 locname = nameTextView.getText().toString();
-
+                postFirebaseDatabase();
             }
         });
 
@@ -406,12 +375,6 @@ public class AddActivity extends AppCompatActivity {
         return ocrResult;
     }
 
-    /**
-     * Makes a string of the real path to the file from the context it is called and the given uri
-     * @param context   context it is being called
-     * @param uri       uri object whole location needs to be found
-     * @return String result of the path uri
-     */
     static String getRealPathFromURI(Context context, Uri uri) {
         String result = null;
         String[] proj = { MediaStore.Images.Media.DATA };
@@ -455,6 +418,16 @@ public class AddActivity extends AppCompatActivity {
         public void onProviderDisabled(String provider) {}
     };
 
+    private void postFirebaseDatabase() {
+        //post data
 
+        Map<String, Object> childUpdates = new HashMap<>();
+        Map<String, Object> postValues = null;
+        FirebasePost post = new FirebasePost(lon,lat);
+        postValues = post.toMap();
+
+        childUpdates.put(locname, postValues);
+        DBReference.updateChildren(childUpdates);
+    }
 }
 

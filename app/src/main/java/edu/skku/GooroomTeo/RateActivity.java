@@ -43,7 +43,7 @@ public class RateActivity extends AppCompatActivity {
     private ArrayList<String> RateandCommentList;
     private ArrayAdapter<String> adapter;
 
-    private long time;
+    private Long time;
     private int rate;
     private String comment;
     private String BuildingName;
@@ -62,10 +62,12 @@ public class RateActivity extends AppCompatActivity {
 
         intent = getIntent();
         BuildingName = intent.getStringExtra("information");
-        refer_path = "locinfo/" + BuildingName;
+        refer_path = "locinfo/" + BuildingName + "/userrate";
         locnametv.setText(BuildingName);
 
-        DBReference = FirebaseDatabase.getInstance().getReference(refer_path);
+        System.out.println(BuildingName.length());
+
+        DBReference = FirebaseDatabase.getInstance().getReference();
 
         RateandCommentList = new ArrayList<>();
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
@@ -91,27 +93,36 @@ public class RateActivity extends AppCompatActivity {
         DBReference.child(refer_path).addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                /**
+                 * Modify Needed!
+                 *
+                 */
                 String key = dataSnapshot.getKey();
-                //System.out.println(key);
-                UserRateInfo get = dataSnapshot.getValue(UserRateInfo.class);
-
-                comment = get.comment;
-                rate = get.rate;
-                String rate_str = Integer.toString(get.rate);
-
-                RateInt.add(rate);
-                RateandCommentList.add("평점: " + rate + "\n코멘트: " + comment);
-                adapter.clear();
-                adapter.addAll(RateandCommentList);
-
-                // Calculate average rate and set
-                double average_rate = 0;
-                int total = RateInt.size();
-                for(int i = 0; i < total; i ++){
-                    average_rate += RateInt.get(i);
+                if(key == null){
+                    avgratetv.setText("아직 평가가 없습니다. 평가해주세요!");
                 }
-                average_rate /= total;
-                avgratetv.setText("평점(평균): " + String.format("%.2f", average_rate));
+                else {
+                    UserRateInfo get = dataSnapshot.getValue(UserRateInfo.class);
+
+                    comment = get.comment;
+                    rate = get.rate;
+                    String rate_str = Integer.toString(get.rate);
+
+                    RateInt.add(rate);
+                    RateandCommentList.add("평점: " + rate + "\n코멘트: " + comment);
+                    adapter.clear();
+                    adapter.addAll(RateandCommentList);
+                    int total = RateInt.size();
+                    double average_rate = 0;
+                    for (int i = 0; i < total; i++) {
+                        average_rate += RateInt.get(i);
+                    }
+                    average_rate /= total;
+                    avgratetv.setText("평점(평균): " + String.format("%.2f", average_rate));
+
+
+                    // Calculate average rate and set
+                }
             }
 
             @Override
@@ -136,7 +147,7 @@ public class RateActivity extends AppCompatActivity {
         });
     }
 
-    private void WrongInfoSendDialog(){
+    private void WrongInfoSendDialog() {
         /**
          *  Send 'Wrong info' message to server
          */
@@ -199,8 +210,7 @@ public class RateActivity extends AppCompatActivity {
                 comment = commentet.getText().toString();
                 if (comment.length() <= 0) {
                     Toast.makeText(RateActivity.this, "코멘트를 입력하십시오", Toast.LENGTH_LONG).show();
-                }
-                else {
+                } else {
                     // Send info to Server
                     postFirebaseDatabase();
                     alert.dismiss();
@@ -223,19 +233,19 @@ public class RateActivity extends AppCompatActivity {
     }
 
 
-    private void postFirebaseDatabase(){
+    private void postFirebaseDatabase() {
         /**
          *  Post data to firebase
-         *  !!!!MODIFY REQUIRED!!!
          */
         Map<String, Object> childUpdates = new HashMap<>();
         Map<String, Object> postValues = null;
 
         time = System.currentTimeMillis();
-        UserRateInfo post = new UserRateInfo();
+        UserRateInfo post = new UserRateInfo(rate, comment);
+        System.out.println(refer_path + "/" + time.toString());
         postValues = post.toMap();
 
-        childUpdates.put(refer_path+"/userrate/"+time, postValues);
+        childUpdates.put(refer_path + "/" + time.toString(), postValues);
         DBReference.updateChildren(childUpdates);
     }
     /*void clearET() {

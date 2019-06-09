@@ -197,7 +197,7 @@ public class MainActivity extends AppCompatActivity
                 //System.out.println(key);
                 FirebasePost get = dataSnapshot.getValue(FirebasePost.class);
                 String[] info = {String.valueOf(get.longitude), String.valueOf(get.latitude), key};
-                String result = info[0] + " : " + info[1] + " : " + info[2];
+                String result = info[0] + ":" + info[1] + ":" + info[2];
                 data.add(result);
                 System.out.println(info[0] + "\t" + info[1] + "\t" + key);
             }

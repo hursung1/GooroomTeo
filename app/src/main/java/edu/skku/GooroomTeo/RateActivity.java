@@ -92,10 +92,7 @@ public class RateActivity extends AppCompatActivity {
         DBReference.child(refer_path).addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                /**
-                 * Modify Needed!
-                 *
-                 */
+                // Calculate average rate and set
                 String key = dataSnapshot.getKey();
 
                 UserRateInfo get = dataSnapshot.getValue(UserRateInfo.class);
@@ -114,10 +111,6 @@ public class RateActivity extends AppCompatActivity {
                 }
                 average_rate /= total;
                 avgratetv.setText("평점(평균): " + String.format("%.2f", average_rate));
-
-
-                // Calculate average rate and set
-
             }
 
             @Override
@@ -140,6 +133,16 @@ public class RateActivity extends AppCompatActivity {
 
             }
         });
+
+        if(savedInstanceState != null){
+
+        }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
     }
 
     private void WrongInfoSendDialog() {

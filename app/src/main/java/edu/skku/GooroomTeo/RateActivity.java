@@ -32,6 +32,8 @@ import java.util.Map;
 public class RateActivity extends AppCompatActivity {
 
     private DatabaseReference DBReference;
+    private EditText commentet;
+    private Spinner spinner;
     private TextView locnametv;
     private TextView avgratetv;
     private Button alertwrongbtn;
@@ -43,11 +45,14 @@ public class RateActivity extends AppCompatActivity {
     private ArrayList<String> RateandCommentList;
     private ArrayAdapter<String> adapter;
 
+    private AlertDialog alert;
+
     private Long time;
     private int rate;
     private String comment;
     private String BuildingName;
     private String refer_path;
+    private boolean isAlertOn = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -134,15 +139,18 @@ public class RateActivity extends AppCompatActivity {
             }
         });
 
-        if(savedInstanceState != null){
-
+        if (savedInstanceState != null) {
+            isAlertOn = savedInstanceState.getBoolean("is_alert_on");
+            if(isAlertOn){
+                RateSendDialog();
+            }
         }
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-
+        outState.putBoolean("is_alert_on", isAlertOn);
     }
 
     private void WrongInfoSendDialog() {
@@ -184,10 +192,10 @@ public class RateActivity extends AppCompatActivity {
 
         final Button sendbtn = dialog_view.findViewById(R.id.sendbtn);
         final Button cancelbtn = dialog_view.findViewById(R.id.cancelbtn);
-        final Spinner spinner = dialog_view.findViewById(R.id.ratespinner);
-        final EditText commentet = dialog_view.findViewById(R.id.commentet);
+        spinner = dialog_view.findViewById(R.id.ratespinner);
+        commentet = dialog_view.findViewById(R.id.commentet);
 
-        final AlertDialog alert = alert_body.create();
+        alert = alert_body.create();
 
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() { // Spinner Selected Listener
             @Override
@@ -211,6 +219,7 @@ public class RateActivity extends AppCompatActivity {
                 } else {
                     // Send info to Server
                     postFirebaseDatabase();
+                    isAlertOn = false;
                     alert.dismiss();
                 }
 
@@ -228,6 +237,7 @@ public class RateActivity extends AppCompatActivity {
 
         alert.setTitle("이 장소 평가");
         alert.show();
+        isAlertOn = true;
     }
 
 
@@ -240,14 +250,10 @@ public class RateActivity extends AppCompatActivity {
 
         time = System.currentTimeMillis();
         UserRateInfo post = new UserRateInfo(rate, comment);
-        System.out.println(refer_path + "/" + time.toString());
         postValues = post.toMap();
 
         childUpdates.put(refer_path + "/" + time.toString(), postValues);
         DBReference.updateChildren(childUpdates);
     }
-    /*void clearET() {
-        edittext_msg.setText("");
-    }*/
 
 }

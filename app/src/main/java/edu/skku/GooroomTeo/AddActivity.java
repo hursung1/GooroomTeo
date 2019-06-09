@@ -67,6 +67,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import androidx.annotation.NonNull;
 
 public class AddActivity extends AppCompatActivity {
     Button uploadbtn, savebtn;
@@ -76,6 +77,7 @@ public class AddActivity extends AppCompatActivity {
     final private static int RESULT_LOAD_IMAGE = 2;
     final private static int REQUEST_CAMERA_PERMISSION_GRANTED = 3;
     final private static int REQUEST_STORAGE_PERMISSION_GRANTED = 4;
+    static String k;
 
     private Button cameraButton, uploadImageButton;
     private ImageView imagePreview;
@@ -106,6 +108,10 @@ public class AddActivity extends AppCompatActivity {
         scanImage = (Button) findViewById(R.id.scanImage);
         noResultText = (TextView) findViewById(R.id.noResultText);
         resultPage = (Button) findViewById(R.id.resultPage);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                            Manifest.permission.READ_EXTERNAL_STORAGE},
+                    1);
 
 
         uploadImageButton.setOnClickListener(new View.OnClickListener() {
@@ -167,6 +173,7 @@ public class AddActivity extends AppCompatActivity {
                 imageFilePath = photoFile.getAbsolutePath();
             } catch (IOException e) {
                 e.printStackTrace();
+                makeToastText(imageFilePath);
             }
 
             // set up authorities that has been set in the manifest and make a uri
@@ -216,8 +223,14 @@ public class AddActivity extends AppCompatActivity {
                     imageFilePath = getRealPathFromURI(this, imageUri);
 
                     // create a bitmap of the image
-                    image = getCorrectOrientedImage(imageFilePath);
-                    makeToastText(imageFilePath);
+                    try {
+                        image = getCorrectOrientedImage(imageFilePath);
+                        makeToastText(imageFilePath);
+                    }
+                    catch (Exception e) {
+                            e.printStackTrace();
+                            makeToastText(imageFilePath);
+                      }
 
                     break;
             }
@@ -255,11 +268,10 @@ public class AddActivity extends AppCompatActivity {
             for(int i=0;i<len;i++)
             {
                 ocrResult.toUpperCase();
-                int index = ocrResult.indexOf("SMOKING AREA");
-                int index2 = ocrResult.indexOf("흡연");
+                int index = ocrResult.indexOf("SMOKING");
+                int index2 = ocrResult.indexOf("AREA");
                 int index3 = ocrResult.indexOf("구름다방");
-
-                if(index>0||index2>0||index3>0) /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                if(index>=0&&index2>=0) /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 {
                     makeToastText("accepted");
                     regButton.setVisibility(View.VISIBLE);
@@ -343,20 +355,26 @@ public class AddActivity extends AppCompatActivity {
         }
 
         // get the orientation
-        int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION,
-                ExifInterface.ORIENTATION_UNDEFINED);
+        try {
+            int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_UNDEFINED);
 
-        // cases of the orientation value and sets the matrix offsetting
-        switch (orientation) {
-            case ExifInterface.ORIENTATION_ROTATE_90:
-                matrix.setRotate(90);
-                break;
-            case ExifInterface.ORIENTATION_ROTATE_180:
-                matrix.setRotate(180);
-                break;
-            case ExifInterface.ORIENTATION_ROTATE_270:
-                matrix.setRotate(270);
-                break;
+
+            // cases of the orientation value and sets the matrix offsetting
+            switch (orientation) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    matrix.setRotate(90);
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    matrix.setRotate(180);
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    matrix.setRotate(270);
+                    break;
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
         }
         // return the rotated bitmap of the original
         Bitmap bitmap = BitmapFactory.decodeFile(imageFilePath);
@@ -429,7 +447,6 @@ public class AddActivity extends AppCompatActivity {
     };
     final LocationListener gpsLocationListener = new LocationListener() {
         public void onLocationChanged(Location location) {
-            String provider = location.getProvider();
             lon = location.getLongitude();
             lat = location.getLatitude();
         }
@@ -437,6 +454,7 @@ public class AddActivity extends AppCompatActivity {
         public void onProviderEnabled(String provider) {}
         public void onProviderDisabled(String provider) {}
     };
+
 
 }
 

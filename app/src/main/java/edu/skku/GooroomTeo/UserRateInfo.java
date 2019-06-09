@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class UserRateInfo {
-    public int rate;
+    public Integer rate;
     public String comment;
 
 

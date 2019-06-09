@@ -65,11 +65,10 @@ public class RateActivity extends AppCompatActivity {
         refer_path = "locinfo/" + BuildingName + "/userrate";
         locnametv.setText(BuildingName);
 
-        System.out.println(BuildingName.length());
-
         DBReference = FirebaseDatabase.getInstance().getReference();
 
         RateandCommentList = new ArrayList<>();
+        RateInt = new ArrayList<>();
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
         listView.setAdapter(adapter);
 
@@ -98,31 +97,27 @@ public class RateActivity extends AppCompatActivity {
                  *
                  */
                 String key = dataSnapshot.getKey();
-                if(key == null){
-                    avgratetv.setText("아직 평가가 없습니다. 평가해주세요!");
+
+                UserRateInfo get = dataSnapshot.getValue(UserRateInfo.class);
+                comment = get.comment;
+                rate = get.rate;
+                String rate_str = Integer.toString(get.rate);
+
+                RateInt.add(rate);
+                RateandCommentList.add("평점: " + rate + "\n코멘트: " + comment);
+                adapter.clear();
+                adapter.addAll(RateandCommentList);
+                int total = RateInt.size();
+                double average_rate = 0;
+                for (int i = 0; i < total; i++) {
+                    average_rate += RateInt.get(i);
                 }
-                else {
-                    UserRateInfo get = dataSnapshot.getValue(UserRateInfo.class);
-
-                    comment = get.comment;
-                    rate = get.rate;
-                    String rate_str = Integer.toString(get.rate);
-
-                    RateInt.add(rate);
-                    RateandCommentList.add("평점: " + rate + "\n코멘트: " + comment);
-                    adapter.clear();
-                    adapter.addAll(RateandCommentList);
-                    int total = RateInt.size();
-                    double average_rate = 0;
-                    for (int i = 0; i < total; i++) {
-                        average_rate += RateInt.get(i);
-                    }
-                    average_rate /= total;
-                    avgratetv.setText("평점(평균): " + String.format("%.2f", average_rate));
+                average_rate /= total;
+                avgratetv.setText("평점(평균): " + String.format("%.2f", average_rate));
 
 
-                    // Calculate average rate and set
-                }
+                // Calculate average rate and set
+
             }
 
             @Override

@@ -12,32 +12,40 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="20dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/listview"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
             android:id="@+id/locimg"
-            android:layout_width="150dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:layout_gravity="center"
+            android:layout_margin="5dp"
+            android:layout_weight="1"
+            android:adjustViewBounds="true"
+            android:src="@mipmap/defaultimage" />
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingLeft="50dp">
+            android:layout_margin="5dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/locnametv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="알 수 없는 위치"
                 android:textSize="30dp" />
 
             <TextView
                 android:id="@+id/avgratetv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:text="아직 평가가 없습니다. 평가해주세요!"
                 android:textSize="20dp" />
 
 
@@ -55,6 +63,8 @@
         android:id="@+id/listview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_weight="1"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
 
 

@@ -251,7 +251,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onMapReady(final GoogleMap map) {
         this.map = map;
-
+/*
         LatLng SEOUL = new LatLng(37.56, 126.97);
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(SEOUL);
@@ -261,7 +261,7 @@ public class MainActivity extends AppCompatActivity
         map.setOnMarkerClickListener(this);
         map.moveCamera(CameraUpdateFactory.newLatLng(SEOUL));
         map.animateCamera(CameraUpdateFactory.zoomTo(10));
-
+*/
 
     }
 

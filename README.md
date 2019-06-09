@@ -24,3 +24,4 @@ GooroomTeo, ¿Where is the smoking zone in our school?
 문제점[2019/06/09 오후 5시쯤]
 1. 현위치 (0, 0)으로 나오는 문제를 수정할 필요가 있습니다.
 2. AddActivity 추가가 아직 안 되었습니다.
+3. 

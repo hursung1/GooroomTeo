@@ -1,7 +1,9 @@
 package edu.skku.GooroomTeo;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -13,8 +15,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -27,33 +31,45 @@ import java.util.Map;
 
 public class RateActivity extends AppCompatActivity {
 
-    private DatabaseReference mPostReference;
-    Button alertwrongbtn, ratesendbtn;
-    ListView listView;
+    private DatabaseReference DBReference;
+    private TextView locnametv;
+    private TextView avgratetv;
+    private Button alertwrongbtn;
+    private Button ratesendbtn;
+    private ListView listView;
+    private Intent intent;
 
-    ArrayList<String> data;
-    ArrayAdapter<String> arrayAdapter;
+    private ArrayList<Integer> RateInt;
+    private ArrayList<String> RateandCommentList;
+    private ArrayAdapter<String> adapter;
 
-    int rate;
-    String comment;
+    private long time;
+    private int rate;
+    private String comment;
+    private String BuildingName;
+    private String refer_path;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rate);
 
+        locnametv = findViewById(R.id.locnametv);
+        avgratetv = findViewById(R.id.avgratetv);
         alertwrongbtn = findViewById(R.id.alertwrongbtn);
         ratesendbtn = findViewById(R.id.ratesendbtn);
         listView = findViewById(R.id.listview);
 
-        mPostReference = FirebaseDatabase.getInstance().getReference();
+        intent = getIntent();
+        BuildingName = intent.getStringExtra("information");
+        refer_path = "locinfo/" + BuildingName;
+        locnametv.setText(BuildingName);
 
-        data = new ArrayList<>();
-        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
-        data.add("111");
-        arrayAdapter.addAll(data);
+        DBReference = FirebaseDatabase.getInstance().getReference(refer_path);
 
-        listView.setAdapter(arrayAdapter);
+        RateandCommentList = new ArrayList<>();
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
+        listView.setAdapter(adapter);
 
         //Wrong info
         alertwrongbtn.setOnClickListener(new View.OnClickListener() {
@@ -71,7 +87,53 @@ public class RateActivity extends AppCompatActivity {
             }
         });
 
-        //getFirebaseDatabase();
+        //Get User comment from firebase database
+        DBReference.child(refer_path).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                String key = dataSnapshot.getKey();
+                //System.out.println(key);
+                UserRateInfo get = dataSnapshot.getValue(UserRateInfo.class);
+
+                comment = get.comment;
+                rate = get.rate;
+                String rate_str = Integer.toString(get.rate);
+
+                RateInt.add(rate);
+                RateandCommentList.add("평점: " + rate + "\n코멘트: " + comment);
+                adapter.clear();
+                adapter.addAll(RateandCommentList);
+
+                // Calculate average rate and set
+                double average_rate = 0;
+                int total = RateInt.size();
+                for(int i = 0; i < total; i ++){
+                    average_rate += RateInt.get(i);
+                }
+                average_rate /= total;
+                avgratetv.setText("평점(평균): " + String.format("%.2f", average_rate));
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     private void WrongInfoSendDialog(){
@@ -161,29 +223,6 @@ public class RateActivity extends AppCompatActivity {
     }
 
 
-    private void getFirebaseDatabase() {
-        /**
-         * Get data from firebase
-         * !!!!MODIFY REQUIRED!!!
-         */
-        final ValueEventListener postListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                data.clear();
-                for(DataSnapshot postSnapshot: dataSnapshot.getChildren()){
-                    String key = postSnapshot.getKey();
-                    FirebasePost get = postSnapshot.getValue(FirebasePost.class);
-                    String[] info = {String.valueOf(get.latitude), String.valueOf(get.longitude), get.name};
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        };
-    }
-
     private void postFirebaseDatabase(){
         /**
          *  Post data to firebase
@@ -192,10 +231,15 @@ public class RateActivity extends AppCompatActivity {
         Map<String, Object> childUpdates = new HashMap<>();
         Map<String, Object> postValues = null;
 
-        FirebasePost post = new FirebasePost();
+        time = System.currentTimeMillis();
+        UserRateInfo post = new UserRateInfo();
         postValues = post.toMap();
-        childUpdates.put(""+temp, postValues);
-        mPostReference.updateChildren(childUpdates);
+
+        childUpdates.put(refer_path+"/userrate/"+time, postValues);
+        DBReference.updateChildren(childUpdates);
     }
+    /*void clearET() {
+        edittext_msg.setText("");
+    }*/
 
 }

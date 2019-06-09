@@ -17,7 +17,7 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
-            android:id="@+id/image"
+            android:id="@+id/locimg"
             android:layout_width="150dp"
             android:layout_height="wrap_content"
             app:layout_constraintTop_toTopOf="parent" />
@@ -29,15 +29,15 @@
             android:paddingLeft="50dp">
 
             <TextView
+                android:id="@+id/locnametv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="반도체관"
                 android:textSize="30dp" />
 
             <TextView
+                android:id="@+id/avgratetv"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="평점: 3"
                 android:textSize="20dp" />
 
 

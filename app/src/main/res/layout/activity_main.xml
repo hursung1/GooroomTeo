@@ -11,41 +11,39 @@
         class="com.google.android.gms.maps.MapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:layout_editor_absoluteX="146dp"
-        tools:layout_editor_absoluteY="161dp" />
+        />
+    <!--
+    tools:layout_editor_absoluteX="146dp"
+    tools:layout_editor_absoluteY="161dp" -->
 
 
-    <Button
-        android:id="@+id/findnear"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toLeftOf="@+id/addcontent"
-        android:text="가까운 곳 찾기"/>
-    <Button
-        android:id="@+id/addcontent"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        android:text="흡연 구역 추가"/>
+        app:layout_constraintBottom_toBottomOf="parent">
 
-    <Button
-        android:id="@+id/getFirebase"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="데이터가져오기"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/findnear" />
+        <Button
+            android:id="@+id/findnear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="가까운 곳 찾기" />
 
-    <Button
-        android:id="@+id/curbtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="1dp"
-        android:text="현위치"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/getFirebase" />
+        <Button
+            android:id="@+id/getFirebase"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="데이터가져오기" />
+
+        <Button
+            android:id="@+id/curbtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="현위치" />
+
+    </LinearLayout>
+
 
 </android.support.constraint.ConstraintLayout>

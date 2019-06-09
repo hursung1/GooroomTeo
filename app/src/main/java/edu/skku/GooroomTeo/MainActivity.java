@@ -8,6 +8,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -24,6 +25,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -37,37 +39,40 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity
         implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
-    Button addbtn;
-    Button findbtn;
-    Button Firebtn;
-    Button currentbtn;
-    GoogleMap map;
-    double lon;
-    double lat;
-    double comlon;
-    double comlat;
-    double shortlon;
-    double shortlat;
-    String [] splitstring;
-    String getFromFire;
-    double shortest;
-    String shortestPlace;
+
     private DatabaseReference mPostReference;
-    ArrayList<String> data;
-    double [] testarray;
-    int a;
-    String title;
-    Location current;
+    private Button addbtn;
+    private Button findbtn;
+    private Button Firebtn;
+    private Button currentbtn;
+    private GoogleMap map;
+    private Location current;
+
+    private double lon;
+    private double lat;
+    private double comlon;
+    private double comlat;
+    private double shortlon;
+    private double shortlat;
+    private double shortest;
+    private String title;
+    private String getFromFire;
+    private String [] splitstring;
+    private String shortestPlace;
+
+    private ArrayList<String> data;
+
+    private double [] testarray;
+    private int a;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        FragmentManager fragmentManager = getFragmentManager();
-        data = new ArrayList<String>();
-        MapFragment mapFragment = (MapFragment) fragmentManager
 
-                .findFragmentById(R.id.map);
+        FragmentManager fragmentManager = getFragmentManager();
+        data = new ArrayList<>();
+        MapFragment mapFragment = (MapFragment) fragmentManager.findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
         //현재위치에서 시작
@@ -93,7 +98,7 @@ public class MainActivity extends AppCompatActivity
 
         Log.d("after mark", "tag" );
 
-        addbtn = findViewById(R.id.addcontent);
+        /*addbtn = findViewById(R.id.addcontent);
         addbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -101,13 +106,14 @@ public class MainActivity extends AppCompatActivity
                 startActivity(intent);
             }
 
-        });
+        });*/
+
         //파이어베이스에서 데이터 가져오기
         Firebtn= findViewById(R.id.getFirebase);
         Firebtn.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
-                getFirebaseDatabase();
+                //getFirebaseDatabase();
                 for (int i=0; i<data.size(); i++){
                     getFromFire=data.get(i);
                     splitstring=getFromFire.split(":");
@@ -148,7 +154,7 @@ public class MainActivity extends AppCompatActivity
         findbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getFirebaseDatabase();
+                //getFirebaseDatabase();
                 Location current=new Location("myCurrent");
                 current.setLatitude(lat);
                 current.setLongitude(lon);
@@ -183,7 +189,39 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        //Get User comment from firebase database
+        mPostReference.child("locinfo").addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                String key = dataSnapshot.getKey();
+                //System.out.println(key);
+                FirebasePost get = dataSnapshot.getValue(FirebasePost.class);
+                String[] info = {String.valueOf(get.longitude), String.valueOf(get.latitude), key};
+                String result = info[0] + " : " + info[1] + " : " + info[2];
+                data.add(result);
+                System.out.println(info[0] + "\t" + info[1] + "\t" + key);
+            }
 
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
     }
 
     final LocationListener networkLocationListener = new LocationListener() {
@@ -237,7 +275,7 @@ public class MainActivity extends AppCompatActivity
         return true;
 
     }
-
+/*
     public void getFirebaseDatabase() {
         final ValueEventListener postListener = new ValueEventListener() {
             @Override
@@ -245,8 +283,9 @@ public class MainActivity extends AppCompatActivity
                 Log.d("onDataChange", "Data is Updated");
                 data.clear();
                 for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
+                    String key = postSnapshot.getKey();
                     FirebasePost get = postSnapshot.getValue(FirebasePost.class);
-                    String[] info = {String.valueOf(get.longitude), String.valueOf(get.latitude), get.name};
+                    String[] info = {String.valueOf(get.longitude), String.valueOf(get.latitude), key};
                     String result = info[0] + " : " + info[1] + " : " + info[2];
                     data.add(result);
                 }
@@ -261,4 +300,5 @@ public class MainActivity extends AppCompatActivity
         mPostReference.child("locinfo").addValueEventListener(postListener);
 
     }
+    */
 }

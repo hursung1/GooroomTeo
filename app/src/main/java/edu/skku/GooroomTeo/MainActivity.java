@@ -58,6 +58,7 @@ public class MainActivity extends AppCompatActivity
     private double shortlon;
     private double shortlat;
     private double shortest;
+    private String currentLocation;
     private String title;
     private String getFromFire;
     private String[] splitstring;
@@ -149,7 +150,6 @@ public class MainActivity extends AppCompatActivity
                 markerOptions.title("현위치");
                 map.addMarker(markerOptions);
 
-                map.setOnMarkerClickListener(MainActivity.this);
                 map.moveCamera(CameraUpdateFactory.newLatLng(MyPos));
                 map.animateCamera(CameraUpdateFactory.zoomTo(16));
             }
@@ -256,17 +256,10 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onMapReady(final GoogleMap map) {
         this.map = map;
-/*
+
         LatLng SEOUL = new LatLng(37.56, 126.97);
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(SEOUL);
-        markerOptions.title("서울");
-        markerOptions.snippet("한국의 수도");
-        map.addMarker(markerOptions);
-        map.setOnMarkerClickListener(this);
         map.moveCamera(CameraUpdateFactory.newLatLng(SEOUL));
         map.animateCamera(CameraUpdateFactory.zoomTo(10));
-*/
 
     }
 
@@ -274,9 +267,13 @@ public class MainActivity extends AppCompatActivity
 
         Intent intent = new Intent(MainActivity.this, RateActivity.class);
         String title = marker.getTitle();
-        intent.putExtra("information", title);
-        startActivity(intent);
+        currentLocation="현위치";
 
+        if (!title.equals(currentLocation)){
+            intent.putExtra("information", title);
+            startActivity(intent);
+
+        }
         return true;
 
     }

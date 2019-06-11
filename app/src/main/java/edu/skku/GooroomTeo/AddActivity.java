@@ -103,7 +103,6 @@ public class AddActivity extends AppCompatActivity {
 
     // 이미지 파일 생성
     static File createImageFile() throws IOException {
-        // uses timestamp to generate a unique filename everytime a file is created
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         String imageFileName = "IMAGE_" + timeStamp + "_";
 
@@ -137,7 +136,7 @@ public class AddActivity extends AppCompatActivity {
                     matrix.setRotate(270);
                     break;
             }
-        } catch (Exception e) {
+        } catch (NullPointerException e) {
             e.printStackTrace();
         }
         Bitmap bitmap = BitmapFactory.decodeFile(imageFilePath);
@@ -145,7 +144,7 @@ public class AddActivity extends AppCompatActivity {
     }
 
     //OCR(글자 인식)
-    static String texRecognition(Bitmap image, Context context) {
+    static String textRecognition(Bitmap image, Context context) {
         String ocrResult = "";
         TextRecognizer textRecognizer = new TextRecognizer.Builder(context.getApplicationContext()).build();
         if (textRecognizer.isOperational()) {
@@ -237,7 +236,6 @@ public class AddActivity extends AppCompatActivity {
     // 이미지 불러오기
     private void getImageFromAlbum() {
         try {
-            // make sure that the intent only allows choosing images.
             Intent pickPhotoIntent =
                     new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(pickPhotoIntent, RESULT_LOAD_IMAGE);
@@ -249,7 +247,6 @@ public class AddActivity extends AppCompatActivity {
     // 카메라로 사진 찍기
     private void dispatchTakePictureIntent() {
         try {
-            // initialize the intent and photo file to be created
             Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             File photoFile = null;
 
@@ -328,7 +325,7 @@ public class AddActivity extends AppCompatActivity {
         scanImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String ocrResult = texRecognition(image, AddActivity.this);
+                String ocrResult = textRecognition(image, AddActivity.this);
                 ocrResultUserInterface(ocrResult);
             }
         });

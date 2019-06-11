@@ -4,6 +4,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
@@ -21,6 +23,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.module.AppGlideModule;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.ChildEventListener;
@@ -28,10 +32,10 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +48,7 @@ public class RateActivity extends AppCompatActivity {
     private Spinner spinner;
     private TextView locnametv;
     private TextView avgratetv;
-    //private ImageView locimg;
+    private ImageView locimg;
     private Button alertwrongbtn;
     private Button ratesendbtn;
     private ListView listView;
@@ -63,6 +67,7 @@ public class RateActivity extends AppCompatActivity {
     private String refer_path;
     private boolean isAlertOn = false;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,6 +75,7 @@ public class RateActivity extends AppCompatActivity {
 
         locnametv = findViewById(R.id.locnametv);
         avgratetv = findViewById(R.id.avgratetv);
+        locimg = findViewById(R.id.locimg);
         alertwrongbtn = findViewById(R.id.alertwrongbtn);
         ratesendbtn = findViewById(R.id.ratesendbtn);
         listView = findViewById(R.id.listview);
@@ -81,14 +87,46 @@ public class RateActivity extends AppCompatActivity {
 
         DBReference = FirebaseDatabase.getInstance().getReference();
         //STReference = FirebaseStorage.getInstance().getReference().child("images/"+BuildingName+".jpg");
+        STReference = FirebaseStorage.getInstance().getReference().child("images/testtesttest.jpeg");
 
-        /*
+
+        try {
+            GlideApp.with(this)
+                    .load(STReference)
+                    .into(locimg);
+        }catch(Exception e) {
+            e.printStackTrace();
+        }/*
+        try{
+            final File dir = new File(Environment.getExternalStorageDirectory() + "/images/test.jpg");
+            FileDownloadTask fileDownloadTask = STReference.getFile(dir);
+            fileDownloadTask.addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                @Override
+                public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                    locimg.setImageURI(Uri.fromFile(dir));
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+
+                }
+            });
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+*/
+
+/*
         final long ONE_MEGABYTE = 1024*1024;
         STReference.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
             @Override
             public void onSuccess(byte[] bytes) {
                 Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                locimg.setImageBitmap(Bitmap.createScaledBitmap(bmp, locimg.getWidth(), locimg.getHeight(), false));
+                try {
+                    locimg.setImageBitmap(bmp);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
             }
 
         }).addOnFailureListener(new OnFailureListener() {

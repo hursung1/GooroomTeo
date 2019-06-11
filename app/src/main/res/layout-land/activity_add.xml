@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".AddActivity">
+
+    <EditText
+        android:id="@+id/editText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="12dp"
+        android:layout_marginBottom="74dp"
+        android:hint="장소 이름을 입력하세요"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/regButton"
+        app:layout_constraintStart_toEndOf="@+id/imagePreview"
+        app:layout_constraintTop_toBottomOf="@+id/cameraButton" />
+
+    <TextView
+        android:id="@+id/uploadImageTextView"
+        android:layout_width="180dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="11dp"
+        android:text="Please select image to scan"
+        android:textAlignment="center"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@+id/ocrResultText"
+        app:layout_constraintEnd_toEndOf="@+id/imagePreview"
+        app:layout_constraintStart_toStartOf="@+id/imagePreview"
+        app:layout_constraintTop_toBottomOf="@+id/imagePreview" />
+
+    <ImageView
+        android:id="@+id/imagePreview"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="31dp"
+        android:layout_marginTop="27dp"
+        android:layout_marginEnd="75dp"
+        android:layout_marginBottom="7dp"
+        app:layout_constraintBottom_toTopOf="@+id/uploadImageTextView"
+        app:layout_constraintEnd_toStartOf="@+id/cameraButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="?attr/actionBarItemBackground" />
+
+    <Button
+        android:id="@+id/regButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="74dp"
+        android:text="입력"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/editText"
+        app:layout_constraintTop_toBottomOf="@+id/galleryImageButton"
+        app:layout_constraintVertical_bias="1.0" />
+
+
+    <Button
+        android:id="@+id/cameraButton"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="98dp"
+        android:layout_marginEnd="37dp"
+        android:layout_marginBottom="112dp"
+        android:clickable="true"
+        android:text="Camera"
+        app:layout_constraintBottom_toTopOf="@+id/editText"
+        app:layout_constraintEnd_toStartOf="@+id/galleryImageButton"
+        app:layout_constraintStart_toEndOf="@+id/imagePreview"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@android:drawable/ic_menu_camera" />
+
+    <Button
+        android:id="@+id/galleryImageButton"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="98dp"
+        android:layout_marginEnd="69dp"
+        android:layout_marginBottom="112dp"
+        android:clickable="true"
+        android:text="Gallery"
+        app:layout_constraintBottom_toTopOf="@+id/editText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/cameraButton"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@android:drawable/ic_menu_gallery" />
+
+    <Button
+        android:id="@+id/scanImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="2dp"
+        android:text="Scan Image"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/noResultText"
+        app:layout_constraintTop_toBottomOf="@+id/resultPage" />
+
+    <TextView
+        android:id="@+id/ocrResultText"
+        android:layout_width="180dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="5dp"
+        android:textAlignment="center"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/resultPage"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/uploadImageTextView" />
+
+    <TextView
+        android:id="@+id/noResultText"
+        android:layout_width="180dp"
+        android:layout_height="wrap_content"
+        android:text="Cannot get text from image, please choose another one!"
+        android:textAlignment="center"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/ocrResultText"
+        app:layout_constraintStart_toStartOf="@+id/ocrResultText"
+        app:layout_constraintTop_toBottomOf="@+id/imagePreview" />
+
+    <Button
+        android:id="@+id/resultPage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginBottom="6dp"
+        android:text="View Result"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/scanImage"
+        app:layout_constraintStart_toStartOf="@+id/noResultText"
+        app:layout_constraintTop_toBottomOf="@+id/ocrResultText" />
+
+</android.support.constraint.ConstraintLayout>

@@ -1,4 +1,5 @@
 package edu.skku.GooroomTeo;
+
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
@@ -61,6 +62,123 @@ public class AddActivity extends AppCompatActivity {
     String locname;
 
 
+    // 위도, 경도 구하기(GPS 사용)
+    final LocationListener gpsLocationListener = new LocationListener() {
+        public void onLocationChanged(Location location) {
+            lon = location.getLongitude();
+            lat = location.getLatitude();
+        }
+
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+        }
+
+        public void onProviderEnabled(String provider) {
+        }
+
+        public void onProviderDisabled(String provider) {
+        }
+    };
+    // 위도, 경도 구하기(network 사용)
+    LocationListener networkLocationListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+            String provider = location.getProvider();
+            lon = location.getLongitude();
+            lat = location.getLatitude();
+            makeToastText(provider + " " + lon + " " + lat);
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+        }
+    };
+
+    // 이미지 파일 생성
+    static File createImageFile() throws IOException {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "IMAGE_" + timeStamp + "_";
+
+        File storageDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+
+        return File.createTempFile(imageFileName, ".jpg", storageDirectory);
+    }
+
+    //이미지 파일 방향 세팅
+    static Bitmap getCorrectOrientedImage(String imageFilePath) {
+        ExifInterface exifInterface = null;
+
+        Matrix matrix = new Matrix();
+        try {
+            exifInterface = new ExifInterface(imageFilePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_UNDEFINED);
+            switch (orientation) {
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    matrix.setRotate(90);
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    matrix.setRotate(180);
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    matrix.setRotate(270);
+                    break;
+            }
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+        }
+        Bitmap bitmap = BitmapFactory.decodeFile(imageFilePath);
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+    }
+
+    //OCR(글자 인식)
+    static String textRecognition(Bitmap image, Context context) {
+        String ocrResult = "";
+        TextRecognizer textRecognizer = new TextRecognizer.Builder(context.getApplicationContext()).build();
+        if (textRecognizer.isOperational()) {
+            Frame frame = new Frame.Builder().setBitmap(image).build();
+            SparseArray<TextBlock> items = textRecognizer.detect(frame);
+            StringBuilder stringBuilder = new StringBuilder();
+            for (int i = 0; i < items.size(); i++) {
+                TextBlock item = items.valueAt(i);
+                stringBuilder.append(item.getValue());
+                stringBuilder.append(" ");
+            }
+            ocrResult = String.valueOf(stringBuilder);
+        }
+        return ocrResult;
+    }
+
+    //Path 구하기
+    static String getRealPathFromURI(Context context, Uri uri) {
+        String result = null;
+        String[] proj = {MediaStore.Images.Media.DATA};
+        Cursor cursor = context.getContentResolver().query(uri, proj, null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                int column_index = cursor.getColumnIndexOrThrow(proj[0]);
+                result = cursor.getString(column_index);
+            }
+            cursor.close();
+        }
+        if (result == null) {
+            result = "Not found";
+        }
+        return result;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,9 +195,7 @@ public class AddActivity extends AppCompatActivity {
         noResultText = (TextView) findViewById(R.id.noResultText);
         resultPage = (Button) findViewById(R.id.resultPage);
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                            Manifest.permission.READ_EXTERNAL_STORAGE},
-                    1);
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
 
 
         uploadImageButton.setOnClickListener(new View.OnClickListener() {
@@ -92,7 +208,6 @@ public class AddActivity extends AppCompatActivity {
         cameraButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // ask for permission once again to make sure everything works
                 askPermission();
                 dispatchTakePictureIntent();
             }
@@ -118,9 +233,9 @@ public class AddActivity extends AppCompatActivity {
 
     }
 
+    // 이미지 불러오기
     private void getImageFromAlbum() {
         try {
-            // make sure that the intent only allows choosing images.
             Intent pickPhotoIntent =
                     new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(pickPhotoIntent, RESULT_LOAD_IMAGE);
@@ -129,13 +244,12 @@ public class AddActivity extends AppCompatActivity {
         }
     }
 
+    // 카메라로 사진 찍기
     private void dispatchTakePictureIntent() {
         try {
-            // initialize the intent and photo file to be created
             Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
             File photoFile = null;
 
-            // try to create the image file
             try {
                 photoFile = createImageFile();
                 imageFilePath = photoFile.getAbsolutePath();
@@ -144,11 +258,9 @@ public class AddActivity extends AppCompatActivity {
                 makeToastText(imageFilePath);
             }
 
-            // set up authorities that has been set in the manifest and make a uri
             String authorities = getApplicationContext().getPackageName() + ".provider";
             Uri cameraIntentUri = FileProvider.getUriForFile(AddActivity.this, authorities, photoFile);
 
-            // attach the Uri object to the camera
             takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraIntentUri);
             if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
@@ -157,17 +269,15 @@ public class AddActivity extends AppCompatActivity {
             makeToastText("Camera load failed");
         }
     }
+
+    // 권한 설정
     private void askPermission() {
-        // asks the program whether the write external storage permission is granted,
-        // if not ask the user
         if (ContextCompat.checkSelfPermission(getApplicationContext(),
                 Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     REQUEST_STORAGE_PERMISSION_GRANTED);
         }
-        // asks the program whether the camera permission is granted,
-        // if not ask the user
         if (ContextCompat.checkSelfPermission(getApplicationContext(),
                 Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,
@@ -176,36 +286,34 @@ public class AddActivity extends AppCompatActivity {
         }
     }
 
+    // 아미지 불러오기
     @Override
     protected void onActivityResult(int requestCode, final int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             switch (requestCode) {
                 case (REQUEST_IMAGE_CAPTURE):
-                    // if the request is capturing the image, create the required bitmap
                     image = getCorrectOrientedImage(imageFilePath);
                     break;
                 case (RESULT_LOAD_IMAGE):
-                    // if the request is to open the gallery and choose picture to upload
                     Uri imageUri = data.getData();
                     imageFilePath = getRealPathFromURI(this, imageUri);
 
-                    // create a bitmap of the image
                     try {
                         image = getCorrectOrientedImage(imageFilePath);
                         makeToastText(imageFilePath);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        makeToastText(imageFilePath);
                     }
-                    catch (Exception e) {
-                            e.printStackTrace();
-                            makeToastText(imageFilePath);
-                      }
 
                     break;
             }
-            // sets the image preview and sets the layout
             layoutProcess(image);
         }
     }
+
+    // 글자 인식 버튼
     private void layoutProcess(final Bitmap image) {
         imagePreview.setImageBitmap(image);
         uploadTextView.setVisibility(View.GONE);
@@ -217,24 +325,20 @@ public class AddActivity extends AppCompatActivity {
         scanImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String ocrResult = texRecognition(image, AddActivity.this);
+                String ocrResult = textRecognition(image, AddActivity.this);
                 ocrResultUserInterface(ocrResult);
             }
         });
     }
 
+    //문자열 처리, 흡연구역인지 여부를 검사
     private void ocrResultUserInterface(String ocrResult) {
         scanImage.setVisibility(View.GONE);
         int len = ocrResult.length();
-        // empty means no text is gotten from the image
         if (len == 0) {
             noResultText.setVisibility(View.VISIBLE);
-            // if result is less than 30 characters, show the text
-        }
-        else {
-            // if not then don't and ask the user to copy to clipboard to get the result
-            for(int i=0;i<len;i++)
-            {
+        } else {
+            for (int i = 0; i < len; i++) {
                 ocrResult.toUpperCase();
                 int index = ocrResult.indexOf("SMOKING");
                 int index2 = ocrResult.indexOf("AREA");
@@ -250,8 +354,7 @@ public class AddActivity extends AppCompatActivity {
                                     android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED ) {
                         ActivityCompat.requestPermissions( AddActivity.this, new String[]
                                 { android.Manifest.permission.ACCESS_FINE_LOCATION },0 );
-                    }
-                    else{
+                    } else {
                         Toast.makeText(AddActivity.this, "LocationManager is ready!", Toast.LENGTH_SHORT).show();
                         lm.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                                 100,
@@ -262,10 +365,7 @@ public class AddActivity extends AppCompatActivity {
                                 0,
                                 networkLocationListener);
                     }
-                    // 등록.
-                }
-                else
-                {
+                } else {
                     regButton.setVisibility(View.INVISIBLE);
                     nameTextView.setVisibility(View.INVISIBLE);
                 }
@@ -278,155 +378,19 @@ public class AddActivity extends AppCompatActivity {
         }
     }
 
-
-    /**
-     * Make a toast for the given message
-     *
-     * @param message value of string to make the toast with
-     */
+    // 토스트
     public void makeToastText(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
-
-
-
-
-    static File createImageFile() throws IOException {
-        // uses timestamp to generate a unique filename everytime a file is created
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "IMAGE_" + timeStamp + "_";
-
-        // sets the image directory to be saved at
-        File storageDirectory =
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-
-        // create the actual file in the directory and records the image path
-        return File.createTempFile(imageFileName, ".jpg", storageDirectory);
-    }
-
-    /**
-     * Gets the image bitmap and does the orientation offsetting to get the correct orientation
-     * @return  bitmap image that has been offset to the correct orientation
-     * source: https://stackoverflow.com/questions/20478765/how-to-get-the
-     * -correct-orientation-of-the-image-selected-from-the-default-image
-     */
-    static Bitmap getCorrectOrientedImage(String imageFilePath) {
-        ExifInterface exifInterface = null;
-
-        // creates an exifinterface and matrix object whose job is to rotate to the correct orientation
-        Matrix matrix = new Matrix();
-        try {
-            exifInterface = new ExifInterface(imageFilePath);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // get the orientation
-        try {
-            int orientation = exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION,
-                    ExifInterface.ORIENTATION_UNDEFINED);
-
-
-            // cases of the orientation value and sets the matrix offsetting
-            switch (orientation) {
-                case ExifInterface.ORIENTATION_ROTATE_90:
-                    matrix.setRotate(90);
-                    break;
-                case ExifInterface.ORIENTATION_ROTATE_180:
-                    matrix.setRotate(180);
-                    break;
-                case ExifInterface.ORIENTATION_ROTATE_270:
-                    matrix.setRotate(270);
-                    break;
-            }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-        // return the rotated bitmap of the original
-        Bitmap bitmap = BitmapFactory.decodeFile(imageFilePath);
-        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-    }
-
-    /**
-     * Makes up the OCR recognition functionality
-     *
-     * @param image image to do the OCR with
-     * @return OCR result from the image scanning
-     */
-    static String texRecognition(Bitmap image, Context context) {
-        String ocrResult = "";
-        // creates an image text recognizer object
-        TextRecognizer textRecognizer = new TextRecognizer.Builder(context.getApplicationContext()).build();
-        if (textRecognizer.isOperational()) {
-            // reads the text from the given bitmap image and creates a string result
-            Frame frame = new Frame.Builder().setBitmap(image).build();
-            SparseArray<TextBlock> items = textRecognizer.detect(frame);
-            StringBuilder stringBuilder = new StringBuilder();
-            for (int i = 0; i < items.size(); i++) {
-                TextBlock item = items.valueAt(i);
-                stringBuilder.append(item.getValue());
-                stringBuilder.append(" ");
-            }
-            ocrResult = String.valueOf(stringBuilder);
-        }
-        return ocrResult;
-    }
-
-    static String getRealPathFromURI(Context context, Uri uri) {
-        String result = null;
-        String[] proj = { MediaStore.Images.Media.DATA };
-        Cursor cursor = context.getContentResolver( ).query( uri, proj, null, null, null );
-        if(cursor != null){
-            if ( cursor.moveToFirst( ) ) {
-                int column_index = cursor.getColumnIndexOrThrow( proj[0] );
-                result = cursor.getString( column_index );
-            }
-            cursor.close( );
-        }
-        if(result == null) {
-            result = "Not found";
-        }
-        return result;
-    }
-
-
-    LocationListener networkLocationListener = new LocationListener() {
-        @Override
-        public void onLocationChanged(Location location) {
-            String provider = location.getProvider();
-            lon = location.getLongitude();
-            lat = location.getLatitude();
-            makeToastText(provider + " " + lon + " " + lat);
-        }
-        @Override
-        public void onStatusChanged(String provider, int status, Bundle extras) {}
-        @Override
-        public void onProviderEnabled(String provider) {}
-        @Override
-        public void onProviderDisabled(String provider) {}
-    };
-    final LocationListener gpsLocationListener = new LocationListener() {
-        public void onLocationChanged(Location location) {
-            lon = location.getLongitude();
-            lat = location.getLatitude();
-        }
-        public void onStatusChanged(String provider, int status, Bundle extras) {}
-        public void onProviderEnabled(String provider) {}
-        public void onProviderDisabled(String provider) {}
-    };
-
+    //데이터 업로드
     private void postFirebaseDatabase() {
-        //post data
-
         Map<String, Object> childUpdates = new HashMap<>();
         Map<String, Object> postValues = null;
         FirebasePost post = new FirebasePost(lon,lat);
         postValues = post.toMap();
 
         childUpdates.put(locname, postValues);
-        DBReference.updateChildren(childUpdates);
+        DBReference.child("locinfo").updateChildren(childUpdates);
     }
 }
-

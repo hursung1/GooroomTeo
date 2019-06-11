@@ -391,6 +391,6 @@ public class AddActivity extends AppCompatActivity {
         postValues = post.toMap();
 
         childUpdates.put(locname, postValues);
-        DBReference.updateChildren(childUpdates);
+        DBReference.child("locinfo").updateChildren(childUpdates);
     }
 }

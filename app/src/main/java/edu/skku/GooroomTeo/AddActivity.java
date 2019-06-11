@@ -17,6 +17,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
@@ -29,11 +30,16 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.vision.Frame;
 import com.google.android.gms.vision.text.TextBlock;
 import com.google.android.gms.vision.text.TextRecognizer;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,7 +55,7 @@ public class AddActivity extends AppCompatActivity {
     final private static int REQUEST_CAMERA_PERMISSION_GRANTED = 3;
     final private static int REQUEST_STORAGE_PERMISSION_GRANTED = 4;
 
-    private Button cameraButton, uploadImageButton;
+    int accepted = 0;
     private ImageView imagePreview;
     private TextView uploadTextView, ocrResultText, noResultText;
     private EditText nameTextView;
@@ -57,6 +63,9 @@ public class AddActivity extends AppCompatActivity {
     private Bitmap image;
     private static String imageFilePath;
     private DatabaseReference DBReference = FirebaseDatabase.getInstance().getReference();
+    String ocrResult;
+    private Button cameraButton, galleryImageButton;
+    private StorageReference mStorageRef;
 
     double lat, lon;
     String locname;
@@ -185,7 +194,7 @@ public class AddActivity extends AppCompatActivity {
         setContentView(R.layout.activity_add);
 
         cameraButton = (Button) findViewById(R.id.cameraButton);
-        uploadImageButton = (Button) findViewById(R.id.galleryImageButton);
+        galleryImageButton = (Button) findViewById(R.id.galleryImageButton);
         imagePreview = (ImageView) findViewById(R.id.imagePreview);
         uploadTextView = (TextView) findViewById(R.id.uploadImageTextView);
         nameTextView = (EditText) findViewById(R.id.editText);
@@ -194,11 +203,17 @@ public class AddActivity extends AppCompatActivity {
         scanImage = (Button) findViewById(R.id.scanImage);
         noResultText = (TextView) findViewById(R.id.noResultText);
         resultPage = (Button) findViewById(R.id.resultPage);
+        mStorageRef = FirebaseStorage.getInstance().getReference();
+
+
+        galleryImageButton.setText("글자 업로드");
+        cameraButton.setText("글자 찍기");
+
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
 
 
-        uploadImageButton.setOnClickListener(new View.OnClickListener() {
+        galleryImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 getImageFromAlbum();
@@ -217,7 +232,7 @@ public class AddActivity extends AppCompatActivity {
         resultPage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                makeToastText(ocrResultText.getText().toString());
+                makeToastText(ocrResult);
             }
         });
         regButton.setOnClickListener(new View.OnClickListener() {
@@ -309,12 +324,21 @@ public class AddActivity extends AppCompatActivity {
 
                     break;
             }
-            layoutProcess(image);
+            if (accepted == 0)
+                layoutProcess(image);
+            else {
+                imagePreview.setVisibility(View.VISIBLE);
+                imagePreview.setImageBitmap(image);
+                scanImage.setVisibility(View.INVISIBLE);
+                checkandupload();
+            }
         }
     }
 
     // 글자 인식 버튼
     private void layoutProcess(final Bitmap image) {
+
+        imagePreview.setVisibility(View.VISIBLE);
         imagePreview.setImageBitmap(image);
         uploadTextView.setVisibility(View.GONE);
         scanImage.setVisibility(View.VISIBLE);
@@ -325,7 +349,7 @@ public class AddActivity extends AppCompatActivity {
         scanImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String ocrResult = textRecognition(image, AddActivity.this);
+                ocrResult = textRecognition(image, AddActivity.this);
                 ocrResultUserInterface(ocrResult);
             }
         });
@@ -337,6 +361,10 @@ public class AddActivity extends AppCompatActivity {
         int len = ocrResult.length();
         if (len == 0) {
             noResultText.setVisibility(View.VISIBLE);
+            accepted = 0;
+            galleryImageButton.setText("글자 업로드");
+            cameraButton.setText("글자 찍기");
+
         } else {
             for (int i = 0; i < len; i++) {
                 ocrResult.toUpperCase();
@@ -346,35 +374,25 @@ public class AddActivity extends AppCompatActivity {
                 if(index>=0&&index2>=0) /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 {
                     makeToastText("accepted");
-                    regButton.setVisibility(View.VISIBLE);
+                    accepted = 1;
+
+                    galleryImageButton.setText("배경사진 업로드");
+                    cameraButton.setText("배경사진 찍기");
                     nameTextView.setVisibility(View.VISIBLE);
-                    final LocationManager lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-                    if ( Build.VERSION.SDK_INT >= 23 &&
-                            ContextCompat.checkSelfPermission( getApplicationContext(),
-                                    android.Manifest.permission.ACCESS_FINE_LOCATION ) != PackageManager.PERMISSION_GRANTED ) {
-                        ActivityCompat.requestPermissions( AddActivity.this, new String[]
-                                { android.Manifest.permission.ACCESS_FINE_LOCATION },0 );
-                    } else {
-                        Toast.makeText(AddActivity.this, "LocationManager is ready!", Toast.LENGTH_SHORT).show();
-                        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                                100,
-                                0,
-                                gpsLocationListener);
-                        lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-                                100,
-                                0,
-                                networkLocationListener);
-                    }
+                    uploadTextView.setTextSize(14);
+                    uploadTextView.setText("위치를 쉽게 파악할 수 있도록 배경 사진을 업로드해주세요.");
+                    imagePreview.setVisibility(View.INVISIBLE);
                 } else {
+                    accepted = 0;
+                    galleryImageButton.setText("글자 업로드");
+                    cameraButton.setText("글자 찍기");
                     regButton.setVisibility(View.INVISIBLE);
                     nameTextView.setVisibility(View.INVISIBLE);
                 }
             }
             resultPage.setVisibility(View.VISIBLE);
-            ocrResultText.setText(ocrResult);
             uploadTextView.setVisibility(View.VISIBLE);
-            uploadTextView.setTextSize(18);
-            uploadTextView.setText(ocrResult);
+
         }
     }
 
@@ -392,5 +410,41 @@ public class AddActivity extends AppCompatActivity {
 
         childUpdates.put(locname, postValues);
         DBReference.child("locinfo").updateChildren(childUpdates);
+
+
+        Uri file = Uri.fromFile(new File(imageFilePath));
+        StorageReference riversRef = mStorageRef.child("images/" + locname);
+        riversRef.putFile(file)
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        // Get a URL to the uploaded content
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        // Handle unsuccessful uploads
+                        // ...
+                    }
+                });
+    }
+
+    public void checkandupload() {
+        if (accepted == 1 && imageFilePath != null) {
+            regButton.setVisibility(View.VISIBLE);
+            makeToastText("~~~~~" + imageFilePath + "~~~~~");
+
+            final LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            if (Build.VERSION.SDK_INT >= 23 &&
+                    ContextCompat.checkSelfPermission(getApplicationContext(),
+                            android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(AddActivity.this, new String[]
+                        {android.Manifest.permission.ACCESS_FINE_LOCATION}, 0);
+            } else {
+                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 0, gpsLocationListener);
+                lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 0, networkLocationListener);
+            }
+        }
     }
 }

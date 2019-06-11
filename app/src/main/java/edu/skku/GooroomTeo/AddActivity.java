@@ -2,6 +2,7 @@ package edu.skku.GooroomTeo;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -21,6 +22,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.SparseArray;
 import android.view.View;
@@ -66,6 +68,9 @@ public class AddActivity extends AppCompatActivity {
     String ocrResult;
     private Button cameraButton, galleryImageButton;
     private StorageReference mStorageRef;
+    private String imageFilePath2;
+
+    private Uri pu;
 
     double lat, lon;
     String locname;
@@ -110,14 +115,22 @@ public class AddActivity extends AppCompatActivity {
         }
     };
 
-    // 이미지 파일 생성
-    static File createImageFile() throws IOException {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "IMAGE_" + timeStamp + "_";
-
-        File storageDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-
-        return File.createTempFile(imageFileName, ".jpg", storageDirectory);
+    //Path 구하기
+    static String getRealPathFromURI(Context context, Uri uri2) {
+        String result = null;
+        String[] proj = {MediaStore.Images.Media.DATA};
+        Cursor cursor = context.getContentResolver().query(uri2, proj, null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                int column_index = cursor.getColumnIndexOrThrow(proj[0]);
+                result = cursor.getString(column_index);
+            }
+            cursor.close();
+        }
+        if (result == null) {
+            result = "Not found";
+        }
+        return result;
     }
 
     //이미지 파일 방향 세팅
@@ -170,22 +183,19 @@ public class AddActivity extends AppCompatActivity {
         return ocrResult;
     }
 
-    //Path 구하기
-    static String getRealPathFromURI(Context context, Uri uri) {
-        String result = null;
-        String[] proj = {MediaStore.Images.Media.DATA};
-        Cursor cursor = context.getContentResolver().query(uri, proj, null, null, null);
-        if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                int column_index = cursor.getColumnIndexOrThrow(proj[0]);
-                result = cursor.getString(column_index);
-            }
-            cursor.close();
-        }
-        if (result == null) {
-            result = "Not found";
-        }
-        return result;
+    // 이미지 파일 생성
+    private File createImageFile() throws IOException {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "TEST_" + timeStamp + "_";
+
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,      /* prefix */
+                ".jpg",         /* suffix */
+                storageDir          /* directory */
+        );
+        imageFilePath2 = image.getAbsolutePath();
+        return image;
     }
 
     @Override
@@ -210,7 +220,7 @@ public class AddActivity extends AppCompatActivity {
         cameraButton.setText("글자 찍기");
 
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA}, 1);
 
 
         galleryImageButton.setOnClickListener(new View.OnClickListener() {
@@ -224,7 +234,7 @@ public class AddActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 askPermission();
-                dispatchTakePictureIntent();
+                sendTakePhotoIntent();
             }
         });
 
@@ -259,31 +269,6 @@ public class AddActivity extends AppCompatActivity {
         }
     }
 
-    // 카메라로 사진 찍기
-    private void dispatchTakePictureIntent() {
-        try {
-            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            File photoFile = null;
-
-            try {
-                photoFile = createImageFile();
-                imageFilePath = photoFile.getAbsolutePath();
-            } catch (IOException e) {
-                e.printStackTrace();
-                makeToastText(imageFilePath);
-            }
-
-            String authorities = getApplicationContext().getPackageName() + ".provider";
-            Uri cameraIntentUri = FileProvider.getUriForFile(AddActivity.this, authorities, photoFile);
-
-            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraIntentUri);
-            if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
-            }
-        } catch (Exception e) {
-            makeToastText("Camera load failed");
-        }
-    }
 
     // 권한 설정
     private void askPermission() {
@@ -308,8 +293,22 @@ public class AddActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK) {
             switch (requestCode) {
                 case (REQUEST_IMAGE_CAPTURE):
+                    imageFilePath = imageFilePath2;
+                    try {
+                        image = getCorrectOrientedImage(imageFilePath);
+                        makeToastText(imageFilePath);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        makeToastText(imageFilePath);
+                    }
+
+
+                    break;
+
+                    /*
                     image = getCorrectOrientedImage(imageFilePath);
                     break;
+                    */
                 case (RESULT_LOAD_IMAGE):
                     Uri imageUri = data.getData();
                     imageFilePath = getRealPathFromURI(this, imageUri);
@@ -366,14 +365,22 @@ public class AddActivity extends AppCompatActivity {
             cameraButton.setText("글자 찍기");
 
         } else {
-            for (int i = 0; i < len; i++) {
+            {
                 ocrResult.toUpperCase();
                 int index = ocrResult.indexOf("SMOKING");
                 int index2 = ocrResult.indexOf("AREA");
                 int index3 = ocrResult.indexOf("구름다방");
                 if(index>=0&&index2>=0) /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 {
-                    makeToastText("accepted");
+                    new AlertDialog.Builder(AddActivity.this)
+                            .setTitle("흡연구연 인증 완료")
+                            .setMessage("흡연구역 인증이 완료되었습니다. \n위치를 쉽게 파악할 수 있도록 흡연구역 근처 배경 사진을 업로드해주세요.\n\n")
+                            .setNeutralButton("확인", new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dlg, int sumthin) {
+
+                                }
+                            })
+                            .show();
                     accepted = 1;
 
                     galleryImageButton.setText("배경사진 업로드");
@@ -428,12 +435,21 @@ public class AddActivity extends AppCompatActivity {
                         // ...
                     }
                 });
+
+        new AlertDialog.Builder(AddActivity.this)
+                .setTitle("등록 완료")
+                .setMessage("등록이 완료되었습니다.\n\n")
+                .setNeutralButton("확인", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dlg, int sumthin) {
+                        finish();
+                    }
+                })
+                .show();
     }
 
     public void checkandupload() {
         if (accepted == 1 && imageFilePath != null) {
             regButton.setVisibility(View.VISIBLE);
-            makeToastText("~~~~~" + imageFilePath + "~~~~~");
 
             final LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             if (Build.VERSION.SDK_INT >= 23 &&
@@ -444,6 +460,44 @@ public class AddActivity extends AppCompatActivity {
             } else {
                 lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 0, gpsLocationListener);
                 lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 0, networkLocationListener);
+            }
+        }
+
+    }
+
+
+    private int exifOrientationToDegrees(int exifOrientation) {
+        if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_90) {
+            return 90;
+        } else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_180) {
+            return 180;
+        } else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_270) {
+            return 270;
+        }
+        return 0;
+    }
+
+    private Bitmap rotate(Bitmap bitmap, float degree) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(degree);
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+    }
+
+    private void sendTakePhotoIntent() {
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+            }
+
+            if (photoFile != null) {
+                pu = FileProvider.getUriForFile(this, getPackageName(), photoFile);
+
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, pu);
+                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
             }
         }
     }

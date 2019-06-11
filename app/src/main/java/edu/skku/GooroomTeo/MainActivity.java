@@ -2,7 +2,9 @@ package edu.skku.GooroomTeo;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -22,6 +24,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -141,6 +144,8 @@ public class MainActivity extends AppCompatActivity
                 current.setLongitude(lon);
                 MarkerOptions markerOptions = new MarkerOptions();
                 markerOptions.position(MyPos);
+                markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+                markerOptions.alpha(0.5f);
                 markerOptions.title("현위치");
                 map.addMarker(markerOptions);
 
@@ -184,7 +189,7 @@ public class MainActivity extends AppCompatActivity
 
                 map.setOnMarkerClickListener(MainActivity.this);
                 map.moveCamera(CameraUpdateFactory.newLatLng(Shortplace));
-                map.animateCamera(CameraUpdateFactory.zoomTo(16));
+                map.animateCamera(CameraUpdateFactory.zoomTo(18));
 
             }
         });
@@ -275,6 +280,13 @@ public class MainActivity extends AppCompatActivity
         return true;
 
     }
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        // TODO Auto-generated method stub
+        super.onConfigurationChanged(newConfig);
+    }
+
+
 /*
     public void getFirebaseDatabase() {
         final ValueEventListener postListener = new ValueEventListener() {

@@ -2,6 +2,8 @@ package edu.skku.GooroomTeo;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
@@ -13,17 +15,22 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,10 +39,12 @@ import java.util.Map;
 public class RateActivity extends AppCompatActivity {
 
     private DatabaseReference DBReference;
+    private StorageReference STReference;
     private EditText commentet;
     private Spinner spinner;
     private TextView locnametv;
     private TextView avgratetv;
+    //private ImageView locimg;
     private Button alertwrongbtn;
     private Button ratesendbtn;
     private ListView listView;
@@ -71,7 +80,24 @@ public class RateActivity extends AppCompatActivity {
         locnametv.setText(BuildingName);
 
         DBReference = FirebaseDatabase.getInstance().getReference();
+        //STReference = FirebaseStorage.getInstance().getReference().child("images/"+BuildingName+".jpg");
 
+        /*
+        final long ONE_MEGABYTE = 1024*1024;
+        STReference.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+            @Override
+            public void onSuccess(byte[] bytes) {
+                Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                locimg.setImageBitmap(Bitmap.createScaledBitmap(bmp, locimg.getWidth(), locimg.getHeight(), false));
+            }
+
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+
+            }
+        });
+*/
         RateandCommentList = new ArrayList<>();
         RateInt = new ArrayList<>();
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
@@ -219,7 +245,6 @@ public class RateActivity extends AppCompatActivity {
                 } else {
                     // Send info to Server
                     postFirebaseDatabase();
-                    isAlertOn = false;
                     alert.dismiss();
                 }
 
@@ -232,6 +257,13 @@ public class RateActivity extends AppCompatActivity {
                 // Cancel
                 Toast.makeText(RateActivity.this, "평가 취소하셨습니다.", Toast.LENGTH_LONG).show();
                 alert.dismiss();
+            }
+        });
+
+        alert.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+                isAlertOn = false;
             }
         });
 

@@ -96,10 +96,8 @@ public class AddActivity extends AppCompatActivity {
     LocationListener networkLocationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
-            String provider = location.getProvider();
             lon = location.getLongitude();
             lat = location.getLatitude();
-            makeToastText(provider + " " + lat + " " + lon);
         }
 
         @Override

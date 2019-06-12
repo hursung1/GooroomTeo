@@ -99,7 +99,7 @@ public class AddActivity extends AppCompatActivity {
             String provider = location.getProvider();
             lon = location.getLongitude();
             lat = location.getLatitude();
-            makeToastText(provider + " " + lon + " " + lat);
+            makeToastText(provider + " " + lat + " " + lon);
         }
 
         @Override
@@ -248,7 +248,7 @@ public class AddActivity extends AppCompatActivity {
         regButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                makeToastText(lon + "  " + lat);
+                makeToastText(lat  + "  " + lon);
                 locname = nameTextView.getText().toString();
                 postFirebaseDatabase();
             }
@@ -412,7 +412,7 @@ public class AddActivity extends AppCompatActivity {
     private void postFirebaseDatabase() {
         Map<String, Object> childUpdates = new HashMap<>();
         Map<String, Object> postValues = null;
-        FirebasePost post = new FirebasePost(lon,lat);
+        FirebasePost post = new FirebasePost(lat,lon);
         postValues = post.toMap();
 
         childUpdates.put(locname, postValues);

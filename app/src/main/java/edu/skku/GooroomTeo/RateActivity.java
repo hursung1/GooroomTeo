@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
@@ -23,19 +25,24 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.module.AppGlideModule;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.io.File;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +51,9 @@ public class RateActivity extends AppCompatActivity {
 
     private DatabaseReference DBReference;
     private StorageReference STReference;
+    private FirebaseAuth mAuth;
+    private FirebaseUser user;
+
     private EditText commentet;
     private Spinner spinner;
     private TextView locnametv;
@@ -59,6 +69,9 @@ public class RateActivity extends AppCompatActivity {
     private ArrayAdapter<String> adapter;
 
     private AlertDialog alert;
+    private Bitmap bm;
+    private Thread mthread;
+    private URL url;
 
     private Long time;
     private int rate;
@@ -87,55 +100,43 @@ public class RateActivity extends AppCompatActivity {
 
         DBReference = FirebaseDatabase.getInstance().getReference();
         //STReference = FirebaseStorage.getInstance().getReference().child("images/"+BuildingName+".jpg");
-        STReference = FirebaseStorage.getInstance().getReference().child("images/testtesttest.jpeg");
-
-
-        try {
-            GlideApp.with(this)
-                    .load(STReference)
-                    .into(locimg);
-        }catch(Exception e) {
-            e.printStackTrace();
-        }/*
-        try{
-            final File dir = new File(Environment.getExternalStorageDirectory() + "/images/test.jpg");
-            FileDownloadTask fileDownloadTask = STReference.getFile(dir);
-            fileDownloadTask.addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                    locimg.setImageURI(Uri.fromFile(dir));
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-
-                }
-            });
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-*/
-
-/*
-        final long ONE_MEGABYTE = 1024*1024;
-        STReference.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+        STReference = FirebaseStorage.getInstance().getReference().child("images/test.jpg");
+        STReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
-            public void onSuccess(byte[] bytes) {
-                Bitmap bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+            public void onSuccess(Uri _uri) {
+                try{
+                    //Bitmap bm = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+                    //locimg.setImageBitmap(bm);
+                    url = new URL(_uri.toString());
+                    mthread.start();
+                    try{
+                        mthread.join();
+                        locimg.setImageBitmap(bm);
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        mthread = new Thread(){
+            @Override
+            public void run() {
                 try {
-                    locimg.setImageBitmap(bmp);
+                    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+                    conn.setDoInput(true);
+                    conn.connect();
+
+                    InputStream is = conn.getInputStream();
+                    bm = BitmapFactory.decodeStream(is);
                 }catch (Exception e){
                     e.printStackTrace();
                 }
             }
+        };
 
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-
-            }
-        });
-*/
         RateandCommentList = new ArrayList<>();
         RateInt = new ArrayList<>();
         adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
@@ -309,7 +310,6 @@ public class RateActivity extends AppCompatActivity {
         alert.show();
         isAlertOn = true;
     }
-
 
     private void postFirebaseDatabase() {
         /**

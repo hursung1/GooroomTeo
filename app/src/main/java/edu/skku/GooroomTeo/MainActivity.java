@@ -181,52 +181,57 @@ public class MainActivity extends AppCompatActivity
                         a = i;
                     }
                 }
-                shortestPlace = data.get(a);
-                splitstring = shortestPlace.split(":");
-                shortlat = Double.valueOf(splitstring[1]).doubleValue();
-                shortlon = Double.valueOf(splitstring[0]).doubleValue();
-                LatLng Shortplace = new LatLng(shortlat, shortlon);
+                try {
+                    shortestPlace = data.get(a);
+                    splitstring = shortestPlace.split(":");
+                    shortlat = Double.valueOf(splitstring[1]).doubleValue();
+                    shortlon = Double.valueOf(splitstring[0]).doubleValue();
+                    LatLng Shortplace = new LatLng(shortlat, shortlon);
 
-                map.setOnMarkerClickListener(MainActivity.this);
-                map.moveCamera(CameraUpdateFactory.newLatLng(Shortplace));
-                map.animateCamera(CameraUpdateFactory.zoomTo(18));
-
+                    map.setOnMarkerClickListener(MainActivity.this);
+                    map.moveCamera(CameraUpdateFactory.newLatLng(Shortplace));
+                    map.animateCamera(CameraUpdateFactory.zoomTo(18));
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
             }
         });
 
         //Get User comment from firebase database
-        mPostReference.child("locinfo").addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                String key = dataSnapshot.getKey();
-                //System.out.println(key);
-                FirebasePost get = dataSnapshot.getValue(FirebasePost.class);
-                String[] info = {String.valueOf(get.longitude), String.valueOf(get.latitude), key};
-                String result = info[0] + ":" + info[1] + ":" + info[2];
-                data.add(result);
-                System.out.println(info[0] + "\t" + info[1] + "\t" + key);
-            }
+        mPostReference.child("locinfo").
 
-            @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                addChildEventListener(new ChildEventListener() {
+                    @Override
+                    public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                        String key = dataSnapshot.getKey();
+                        //System.out.println(key);
+                        FirebasePost get = dataSnapshot.getValue(FirebasePost.class);
+                        String[] info = {String.valueOf(get.longitude), String.valueOf(get.latitude), key};
+                        String result = info[0] + ":" + info[1] + ":" + info[2];
+                        data.add(result);
+                        System.out.println(info[0] + "\t" + info[1] + "\t" + key);
+                    }
 
-            }
+                    @Override
+                    public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
-            @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+                    }
 
-            }
+                    @Override
+                    public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
 
-            @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                    }
 
-            }
+                    @Override
+                    public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
+                    }
 
-            }
-        });
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
     }
 
     final LocationListener networkLocationListener = new LocationListener() {
@@ -267,9 +272,9 @@ public class MainActivity extends AppCompatActivity
 
         Intent intent = new Intent(MainActivity.this, RateActivity.class);
         String title = marker.getTitle();
-        currentLocation="현위치";
+        currentLocation = "현위치";
 
-        if (!title.equals(currentLocation)){
+        if (!title.equals(currentLocation)) {
             intent.putExtra("information", title);
             startActivity(intent);
 
@@ -277,6 +282,7 @@ public class MainActivity extends AppCompatActivity
         return true;
 
     }
+
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         // TODO Auto-generated method stub

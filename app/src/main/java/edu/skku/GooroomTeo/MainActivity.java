@@ -191,47 +191,47 @@ public class MainActivity extends AppCompatActivity
                     map.setOnMarkerClickListener(MainActivity.this);
                     map.moveCamera(CameraUpdateFactory.newLatLng(Shortplace));
                     map.animateCamera(CameraUpdateFactory.zoomTo(18));
-                } catch (Exception e){
+                }catch (Exception e){
                     e.printStackTrace();
                 }
+
+
             }
         });
 
         //Get User comment from firebase database
-        mPostReference.child("locinfo").
+        mPostReference.child("locinfo").addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+                String key = dataSnapshot.getKey();
+                //System.out.println(key);
+                FirebasePost get = dataSnapshot.getValue(FirebasePost.class);
+                String[] info = {String.valueOf(get.longitude), String.valueOf(get.latitude), key};
+                String result = info[0] + ":" + info[1] + ":" + info[2];
+                data.add(result);
+                System.out.println(info[0] + "\t" + info[1] + "\t" + key);
+            }
 
-                addChildEventListener(new ChildEventListener() {
-                    @Override
-                    public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
-                        String key = dataSnapshot.getKey();
-                        //System.out.println(key);
-                        FirebasePost get = dataSnapshot.getValue(FirebasePost.class);
-                        String[] info = {String.valueOf(get.longitude), String.valueOf(get.latitude), key};
-                        String result = info[0] + ":" + info[1] + ":" + info[2];
-                        data.add(result);
-                        System.out.println(info[0] + "\t" + info[1] + "\t" + key);
-                    }
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
-                    @Override
-                    public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            }
 
-                    }
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
 
-                    @Override
-                    public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+            }
 
-                    }
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
 
-                    @Override
-                    public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            }
 
-                    }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                    }
-                });
+            }
+        });
     }
 
     final LocationListener networkLocationListener = new LocationListener() {
@@ -272,9 +272,9 @@ public class MainActivity extends AppCompatActivity
 
         Intent intent = new Intent(MainActivity.this, RateActivity.class);
         String title = marker.getTitle();
-        currentLocation = "현위치";
+        currentLocation="현위치";
 
-        if (!title.equals(currentLocation)) {
+        if (!title.equals(currentLocation)){
             intent.putExtra("information", title);
             startActivity(intent);
 
@@ -282,38 +282,10 @@ public class MainActivity extends AppCompatActivity
         return true;
 
     }
-
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         // TODO Auto-generated method stub
         super.onConfigurationChanged(newConfig);
     }
 
-
-/*
-    public void getFirebaseDatabase() {
-        final ValueEventListener postListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Log.d("onDataChange", "Data is Updated");
-                data.clear();
-                for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                    String key = postSnapshot.getKey();
-                    FirebasePost get = postSnapshot.getValue(FirebasePost.class);
-                    String[] info = {String.valueOf(get.longitude), String.valueOf(get.latitude), key};
-                    String result = info[0] + " : " + info[1] + " : " + info[2];
-                    data.add(result);
-                }
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        };
-        mPostReference.child("locinfo").addValueEventListener(postListener);
-
-    }
-    */
 }

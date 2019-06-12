@@ -105,8 +105,6 @@ public class RateActivity extends AppCompatActivity {
             @Override
             public void onSuccess(Uri _uri) {
                 try{
-                    //Bitmap bm = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
-                    //locimg.setImageBitmap(bm);
                     url = new URL(_uri.toString());
                     mthread.start();
                     try{
@@ -163,7 +161,6 @@ public class RateActivity extends AppCompatActivity {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 // Calculate average rate and set
-                String key = dataSnapshot.getKey();
 
                 UserRateInfo get = dataSnapshot.getValue(UserRateInfo.class);
                 comment = get.comment;

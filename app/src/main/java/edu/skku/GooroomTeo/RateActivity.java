@@ -99,8 +99,8 @@ public class RateActivity extends AppCompatActivity {
         locnametv.setText(BuildingName);
 
         DBReference = FirebaseDatabase.getInstance().getReference();
-        //STReference = FirebaseStorage.getInstance().getReference().child("images/"+BuildingName+".jpg");
-        STReference = FirebaseStorage.getInstance().getReference().child("images/test.jpg");
+        STReference = FirebaseStorage.getInstance().getReference().child("images/"+BuildingName);
+        //STReference = FirebaseStorage.getInstance().getReference().child("images/test");
         STReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri _uri) {

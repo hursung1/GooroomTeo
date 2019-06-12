@@ -93,6 +93,7 @@ public class MainActivity extends AppCompatActivity
                     100,
                     0,
                     networkLocationListener);
+            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 0, gpsLocationListener);
         }
         mPostReference = FirebaseDatabase.getInstance().getReference();
 
@@ -233,6 +234,22 @@ public class MainActivity extends AppCompatActivity
             }
         });
     }
+
+    final LocationListener gpsLocationListener = new LocationListener() {
+        public void onLocationChanged(Location location) {
+            lon = location.getLongitude();
+            lat = location.getLatitude();
+        }
+
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+        }
+
+        public void onProviderEnabled(String provider) {
+        }
+
+        public void onProviderDisabled(String provider) {
+        }
+    };
 
     final LocationListener networkLocationListener = new LocationListener() {
         @Override

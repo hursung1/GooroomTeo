@@ -26,3 +26,6 @@ GooroomTeo, ¿Where is the smoking zone in our school?
 1. 현위치 (0, 0)으로 나오는 문제를 수정할 필요가 있습니다.
 2. AddActivity 추가가 아직 안 되었습니다.
 3. MainActivity와 AddActivity Landscape mode 지원해야 합니다.
+
+수정 로그[2019/06/12 오전 9시쯤]
+1. RateActivity에서 Image 잘 불러오는 것을 확인하였습니다.

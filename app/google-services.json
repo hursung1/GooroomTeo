@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "484228113740-jvcvqqsc6g36cssk9e0cief5gc415so9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "edu.skku.GooroomTeo",
+            "certificate_hash": "7f6445216f3a2cc6d89679d373c7801b0fd3984e"
+          }
+        },
+        {
           "client_id": "484228113740-gg5b1a1957auffnu4crfikeegtksbaki.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

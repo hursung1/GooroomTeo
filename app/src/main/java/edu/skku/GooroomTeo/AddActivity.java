@@ -69,13 +69,12 @@ public class AddActivity extends AppCompatActivity {
     private Button cameraButton, galleryImageButton;
     private StorageReference mStorageRef;
     private String imageFilePath2;
+    private String okpath;
 
     private Uri pu;
 
     double lat, lon;
     String locname;
-
-
     // 위도, 경도 구하기(GPS 사용)
     final LocationListener gpsLocationListener = new LocationListener() {
         public void onLocationChanged(Location location) {
@@ -99,7 +98,6 @@ public class AddActivity extends AppCompatActivity {
             String provider = location.getProvider();
             lon = location.getLongitude();
             lat = location.getLatitude();
-            makeToastText(provider + " " + lon + " " + lat);
         }
 
         @Override
@@ -115,7 +113,7 @@ public class AddActivity extends AppCompatActivity {
         }
     };
 
-    //Path 구하기
+    //이미지 파일 Path 구하기
     static String getRealPathFromURI(Context context, Uri uri2) {
         String result = null;
         String[] proj = {MediaStore.Images.Media.DATA};
@@ -222,7 +220,6 @@ public class AddActivity extends AppCompatActivity {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
             requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA}, 1);
 
-
         galleryImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -253,9 +250,6 @@ public class AddActivity extends AppCompatActivity {
                 postFirebaseDatabase();
             }
         });
-
-
-
     }
 
     // 이미지 불러오기
@@ -286,7 +280,7 @@ public class AddActivity extends AppCompatActivity {
         }
     }
 
-    // 아미지 불러오기
+    // 이미지 불러오기
     @Override
     protected void onActivityResult(int requestCode, final int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -301,14 +295,8 @@ public class AddActivity extends AppCompatActivity {
                         e.printStackTrace();
                         makeToastText(imageFilePath);
                     }
-
-
                     break;
 
-                    /*
-                    image = getCorrectOrientedImage(imageFilePath);
-                    break;
-                    */
                 case (RESULT_LOAD_IMAGE):
                     Uri imageUri = data.getData();
                     imageFilePath = getRealPathFromURI(this, imageUri);
@@ -366,12 +354,15 @@ public class AddActivity extends AppCompatActivity {
 
         } else {
             {
-                ocrResult.toUpperCase();
+                String temp = ocrResult;
+                ocrResult = temp.toUpperCase(); // 대문자로 변환
                 int index = ocrResult.indexOf("SMOKING");
                 int index2 = ocrResult.indexOf("AREA");
                 int index3 = ocrResult.indexOf("구름다방");
-                if(index>=0&&index2>=0) /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+                int index4 = ocrResult.indexOf("흡연");
+                if ((index >= 0 && index2 >= 0) || index3 >= 0 || index4 >= 0) /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
                 {
+                    okpath = imageFilePath;
                     new AlertDialog.Builder(AddActivity.this)
                             .setTitle("흡연구연 인증 완료")
                             .setMessage("흡연구역 인증이 완료되었습니다. \n위치를 쉽게 파악할 수 있도록 흡연구역 근처 배경 사진을 업로드해주세요.\n\n")
@@ -425,14 +416,11 @@ public class AddActivity extends AppCompatActivity {
                 .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                     @Override
                     public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        // Get a URL to the uploaded content
                     }
                 })
                 .addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception exception) {
-                        // Handle unsuccessful uploads
-                        // ...
                     }
                 });
 
@@ -447,43 +435,47 @@ public class AddActivity extends AppCompatActivity {
                 .show();
     }
 
+    //GPS 정보 확인
+
     public void checkandupload() {
         if (accepted == 1 && imageFilePath != null) {
-            regButton.setVisibility(View.VISIBLE);
 
-            final LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            if (Build.VERSION.SDK_INT >= 23 &&
-                    ContextCompat.checkSelfPermission(getApplicationContext(),
-                            android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(AddActivity.this, new String[]
-                        {android.Manifest.permission.ACCESS_FINE_LOCATION}, 0);
+            regButton.setVisibility(View.VISIBLE);
+            String testlon = null, testlat = null;
+            try {
+                ExifInterface exif = new ExifInterface(okpath);
+                testlon = exif.getAttribute(ExifInterface.TAG_GPS_LONGITUDE);
+                testlat = exif.getAttribute(ExifInterface.TAG_GPS_LATITUDE);
+            } catch (IOException e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Error!", Toast.LENGTH_LONG).show();
+            }
+
+            if (testlon != null && testlat != null) {
+                double lo = Double.parseDouble(testlon);
+                double la = Double.parseDouble(testlat);
+                lon = lo;
+                lat = la;
             } else {
-                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 0, gpsLocationListener);
-                lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 0, networkLocationListener);
+
+                final LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+                if (Build.VERSION.SDK_INT >= 23 &&
+                        ContextCompat.checkSelfPermission(getApplicationContext(),
+                                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(AddActivity.this, new String[]
+                            {android.Manifest.permission.ACCESS_FINE_LOCATION}, 0);
+                } else {
+                    lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 0, gpsLocationListener);
+                    lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 100, 0, networkLocationListener);
+                }
             }
         }
 
     }
 
-
-    private int exifOrientationToDegrees(int exifOrientation) {
-        if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_90) {
-            return 90;
-        } else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_180) {
-            return 180;
-        } else if (exifOrientation == ExifInterface.ORIENTATION_ROTATE_270) {
-            return 270;
-        }
-        return 0;
-    }
-
-    private Bitmap rotate(Bitmap bitmap, float degree) {
-        Matrix matrix = new Matrix();
-        matrix.postRotate(degree);
-        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-    }
-
     private void sendTakePhotoIntent() {
+
+
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
             File photoFile = null;

@@ -34,7 +34,9 @@
             android:value="AIzaSyD50VzODyB-FLvIVL7aIz5u7wSAsirxjPI">
         </meta-data>
 
-        <activity android:name=".AddActivity"></activity>
+        <activity
+            android:name=".AddActivity"
+            android:configChanges="orientation|screenSize"></activity>
         <activity android:name=".RateActivity" />
         <activity android:name=".MainActivity"
             android:configChanges="orientation|screenSize">

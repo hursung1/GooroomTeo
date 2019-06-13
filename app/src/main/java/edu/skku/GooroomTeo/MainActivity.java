@@ -93,6 +93,7 @@ public class MainActivity extends AppCompatActivity
                     100,
                     0,
                     networkLocationListener);
+            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 100, 0, gpsLocationListener);
         }
         mPostReference = FirebaseDatabase.getInstance().getReference();
 
@@ -181,15 +182,20 @@ public class MainActivity extends AppCompatActivity
                         a = i;
                     }
                 }
-                shortestPlace = data.get(a);
-                splitstring = shortestPlace.split(":");
-                shortlat = Double.valueOf(splitstring[1]).doubleValue();
-                shortlon = Double.valueOf(splitstring[0]).doubleValue();
-                LatLng Shortplace = new LatLng(shortlat, shortlon);
+                try {
+                    shortestPlace = data.get(a);
+                    splitstring = shortestPlace.split(":");
+                    shortlat = Double.valueOf(splitstring[1]).doubleValue();
+                    shortlon = Double.valueOf(splitstring[0]).doubleValue();
+                    LatLng Shortplace = new LatLng(shortlat, shortlon);
 
-                map.setOnMarkerClickListener(MainActivity.this);
-                map.moveCamera(CameraUpdateFactory.newLatLng(Shortplace));
-                map.animateCamera(CameraUpdateFactory.zoomTo(18));
+                    map.setOnMarkerClickListener(MainActivity.this);
+                    map.moveCamera(CameraUpdateFactory.newLatLng(Shortplace));
+                    map.animateCamera(CameraUpdateFactory.zoomTo(18));
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
 
             }
         });
@@ -228,6 +234,22 @@ public class MainActivity extends AppCompatActivity
             }
         });
     }
+
+    final LocationListener gpsLocationListener = new LocationListener() {
+        public void onLocationChanged(Location location) {
+            lon = location.getLongitude();
+            lat = location.getLatitude();
+        }
+
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+        }
+
+        public void onProviderEnabled(String provider) {
+        }
+
+        public void onProviderDisabled(String provider) {
+        }
+    };
 
     final LocationListener networkLocationListener = new LocationListener() {
         @Override
@@ -283,31 +305,4 @@ public class MainActivity extends AppCompatActivity
         super.onConfigurationChanged(newConfig);
     }
 
-
-/*
-    public void getFirebaseDatabase() {
-        final ValueEventListener postListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Log.d("onDataChange", "Data is Updated");
-                data.clear();
-                for (DataSnapshot postSnapshot : dataSnapshot.getChildren()) {
-                    String key = postSnapshot.getKey();
-                    FirebasePost get = postSnapshot.getValue(FirebasePost.class);
-                    String[] info = {String.valueOf(get.longitude), String.valueOf(get.latitude), key};
-                    String result = info[0] + " : " + info[1] + " : " + info[2];
-                    data.add(result);
-                }
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        };
-        mPostReference.child("locinfo").addValueEventListener(postListener);
-
-    }
-    */
 }

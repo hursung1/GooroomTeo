@@ -68,8 +68,8 @@ public class RateActivity extends AppCompatActivity {
     private ArrayList<String> RateandCommentList;
     private ArrayAdapter<String> adapter;
 
-    private AlertDialog alert;
-    private Bitmap bm;
+    private AlertDialog wronginfo_alert;
+    private Bitmap bm = null;
     private Thread mthread;
     private URL url;
 
@@ -77,8 +77,11 @@ public class RateActivity extends AppCompatActivity {
     private int rate;
     private String comment;
     private String BuildingName;
-    private String refer_path;
-    private boolean isAlertOn = false;
+    private String refer_path_userrate;
+    private String refer_path_wronginfocmts;
+    private boolean wronginfoAlert = false;
+    private boolean whichAlert = false;
+    private boolean commentAlert = false;
 
 
     @Override
@@ -95,41 +98,47 @@ public class RateActivity extends AppCompatActivity {
 
         intent = getIntent();
         BuildingName = intent.getStringExtra("information");
-        refer_path = "locinfo/" + BuildingName + "/userrate";
+        refer_path_userrate = "locinfo/" + BuildingName + "/userrate";
+        refer_path_wronginfocmts = "locinfo/" + BuildingName + "/wronginfocmt";
         locnametv.setText(BuildingName);
 
         DBReference = FirebaseDatabase.getInstance().getReference();
-        STReference = FirebaseStorage.getInstance().getReference().child("images/"+BuildingName);
+        STReference = FirebaseStorage.getInstance().getReference().child("images/" + BuildingName);
         //STReference = FirebaseStorage.getInstance().getReference().child("images/test");
         STReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri _uri) {
-                try{
-                    url = new URL(_uri.toString());
-                    mthread.start();
-                    try{
-                        mthread.join();
-                        locimg.setImageBitmap(bm);
-                    }catch (Exception e){
+                if (bm == null) {
+                    try {
+                        url = new URL(_uri.toString());
+                        mthread.start();
+                        try {
+                            mthread.join();
+                            locimg.setImageBitmap(bm);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
-                }catch(Exception e){
-                    e.printStackTrace();
+                }
+                else{
+                    locimg.setImageBitmap(bm);
                 }
             }
         });
 
-        mthread = new Thread(){
+        mthread = new Thread() {
             @Override
             public void run() {
                 try {
-                    HttpURLConnection conn = (HttpURLConnection)url.openConnection();
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                     conn.setDoInput(true);
                     conn.connect();
 
                     InputStream is = conn.getInputStream();
                     bm = BitmapFactory.decodeStream(is);
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
@@ -152,12 +161,12 @@ public class RateActivity extends AppCompatActivity {
         ratesendbtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                RateSendDialog();
+                DialogCall(true);
             }
         });
 
         //Get User comment from firebase database
-        DBReference.child(refer_path).addChildEventListener(new ChildEventListener() {
+        DBReference.child(refer_path_userrate).addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
                 // Calculate average rate and set
@@ -202,9 +211,15 @@ public class RateActivity extends AppCompatActivity {
         });
 
         if (savedInstanceState != null) {
-            isAlertOn = savedInstanceState.getBoolean("is_alert_on");
-            if(isAlertOn){
-                RateSendDialog();
+            wronginfoAlert = savedInstanceState.getBoolean("wronginfo_alert");
+            commentAlert = savedInstanceState.getBoolean("comment_alert");
+            whichAlert = savedInstanceState.getBoolean("which_alert");
+            bm = savedInstanceState.getParcelable("image");
+            if (wronginfoAlert) {
+                WrongInfoSendDialog();
+            }
+            if (commentAlert) {
+                DialogCall(whichAlert);
             }
         }
     }
@@ -212,19 +227,25 @@ public class RateActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putBoolean("is_alert_on", isAlertOn);
+        outState.putBoolean("wronginfo_alert", wronginfoAlert);
+        outState.putBoolean("comment_alert", commentAlert);
+        outState.putBoolean("which_alert", whichAlert);
+        outState.putParcelable("image", bm);
     }
 
     private void WrongInfoSendDialog() {
         /**
          *  Send 'Wrong info' message to server
          */
-        AlertDialog.Builder alert_body = new AlertDialog.Builder(RateActivity.this);
-        alert_body.setMessage("잘못된 정보를 신고하시겠습니까?");
+        final AlertDialog.Builder alert_body = new AlertDialog.Builder(RateActivity.this);
+        alert_body.setTitle("잘못된 정보 신고");
+        alert_body.setMessage("잘못된 정보를 신고할까요?");
         alert_body.setPositiveButton("네", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                Toast.makeText(RateActivity.this, "신고", Toast.LENGTH_LONG).show();
+                wronginfo_alert.dismiss();
+                DialogCall(false);
+                //Toast.makeText(RateActivity.this, "신고", Toast.LENGTH_LONG).show();
                 // Send message to server
             }
         });
@@ -232,44 +253,67 @@ public class RateActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 // Cancel
+                wronginfo_alert.dismiss();
                 Toast.makeText(RateActivity.this, "신고 취소", Toast.LENGTH_LONG).show();
             }
         });
 
-        AlertDialog alert = alert_body.create();
-        alert.setTitle("잘못된 정보 신고");
-        alert.show();
+        alert_body.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+                wronginfoAlert = false;
+            }
+        });
+        wronginfo_alert = alert_body.create();
+        wronginfo_alert.show();
+        wronginfoAlert = true;
     }
 
-    private void RateSendDialog() {
+    private void DialogCall(final boolean isRate) { // if isRate is true --> rating, else --> send wrong info
         /**
          *  Function that gets rate & comment from user.
          *  Then, call postFirebaseDatabase()
          *
          */
+
+        whichAlert = isRate;
+        String alert_txtfield = "어떤 정보가 잘못되었나요?";
+
+        final AlertDialog comment_alert;
         AlertDialog.Builder alert_body = new AlertDialog.Builder(RateActivity.this);
         LayoutInflater inflater = getLayoutInflater();
         View dialog_view = inflater.inflate(R.layout.dialog_rate, null);
         alert_body.setView(dialog_view);
 
-        final Button sendbtn = dialog_view.findViewById(R.id.sendbtn);
-        final Button cancelbtn = dialog_view.findViewById(R.id.cancelbtn);
+        Button sendbtn = dialog_view.findViewById(R.id.sendbtn);
+        Button cancelbtn = dialog_view.findViewById(R.id.cancelbtn);
+        TextView ratetv = dialog_view.findViewById(R.id.ratetv);
+        TextView alert_commenttv = dialog_view.findViewById(R.id.alert_commenttv);
         spinner = dialog_view.findViewById(R.id.ratespinner);
         commentet = dialog_view.findViewById(R.id.commentet);
 
-        alert = alert_body.create();
+        comment_alert = alert_body.create();
 
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() { // Spinner Selected Listener
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                rate = Integer.parseInt(adapterView.getItemAtPosition(i).toString());
-            }
+        if (isRate) {
+            alert_txtfield = "이 장소는 어떤가요?";
 
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
+            ratetv.setVisibility(View.VISIBLE);
+            spinner.setVisibility(View.VISIBLE);
 
-            }
-        });
+            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() { // Spinner Selected Listener
+                @Override
+                public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                    rate = Integer.parseInt(adapterView.getItemAtPosition(i).toString());
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> adapterView) {
+
+                }
+            });
+        }
+
+        alert_commenttv.setText(alert_txtfield);
 
         sendbtn.setOnClickListener(new View.OnClickListener() { // Send button OnClickListener
             @Override
@@ -277,11 +321,11 @@ public class RateActivity extends AppCompatActivity {
                 // Send message to server
                 comment = commentet.getText().toString();
                 if (comment.length() <= 0) {
-                    Toast.makeText(RateActivity.this, "코멘트를 입력하십시오", Toast.LENGTH_LONG).show();
+                    Toast.makeText(RateActivity.this, "내용을 적어주세요.", Toast.LENGTH_LONG).show();
                 } else {
                     // Send info to Server
-                    postFirebaseDatabase();
-                    alert.dismiss();
+                    postFirebaseDatabase(isRate);
+                    comment_alert.dismiss();
                 }
 
             }
@@ -291,34 +335,41 @@ public class RateActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 // Cancel
-                Toast.makeText(RateActivity.this, "평가 취소하셨습니다.", Toast.LENGTH_LONG).show();
-                alert.dismiss();
+                Toast.makeText(RateActivity.this, "평가를 취소했어요.", Toast.LENGTH_LONG).show();
+                comment_alert.dismiss();
             }
         });
 
-        alert.setOnDismissListener(new DialogInterface.OnDismissListener() {
+        comment_alert.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialogInterface) {
-                isAlertOn = false;
+                commentAlert = false;
             }
         });
 
-        alert.setTitle("이 장소 평가");
-        alert.show();
-        isAlertOn = true;
+        comment_alert.setTitle("이 장소 평가");
+        comment_alert.show();
+        commentAlert = true;
     }
 
-    private void postFirebaseDatabase() {
+    private void postFirebaseDatabase(boolean isRate) {
         /**
          *  Post data to firebase
          */
+        String refer_path;
+        UserRateInfo post;
         Map<String, Object> childUpdates = new HashMap<>();
         Map<String, Object> postValues = null;
 
         time = System.currentTimeMillis();
-        UserRateInfo post = new UserRateInfo(rate, comment);
+        if (isRate) {
+            post = new UserRateInfo(rate, comment);
+            refer_path = refer_path_userrate;
+        } else {
+            post = new UserRateInfo(comment);
+            refer_path = refer_path_wronginfocmts;
+        }
         postValues = post.toMap();
-
         childUpdates.put(refer_path + "/" + time.toString(), postValues);
         DBReference.updateChildren(childUpdates);
     }

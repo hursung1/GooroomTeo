@@ -9,6 +9,9 @@ public class UserRateInfo {
 
 
     public UserRateInfo(){}
+    public UserRateInfo(String comment){
+        this.comment = comment;
+    }
     public UserRateInfo(int rate, String comment) {
         this.rate = rate;
         this.comment = comment;

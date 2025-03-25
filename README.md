@@ -15,7 +15,7 @@ GooroomTeo, ¿Where is the smoking zone in our school?
 1. 아직 Firebase에서 받아온 정보를 Pin 하지 못합니다.
 2. 현위치가 아직 (0, 0)으로 나옵니다.
 3. User Rate를 못받아옵니다.
-4. AddActivity는 git에 추가되지도 않았습니다. ㅜㅜ
+4. AddActivity 추가가 필요합니다.
 
 수정 로그[2019/06/09 오후 5시쯤]
 1. Pin을 누르면 RateActivity에서 해당 위치 이름과 평균 평점, 사용자들의 rate와 comment가 잘 나옵니다.
